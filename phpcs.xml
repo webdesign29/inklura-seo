@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<ruleset name="inklura-seo">
+	<description>Coding standards for inklura-seo.</description>
+
+	<file>inklura-seo.php</file>
+	<file>uninstall.php</file>
+	<file>src</file>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
+	<config name="testVersion" value="7.4-"/>
+	<config name="minimum_wp_version" value="5.8"/>
+
+	<rule ref="WordPress"/>
+
+	<rule ref="PHPCompatibilityWP"/>
+
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="inklura_seo"/>
+				<element value="inklura"/>
+				<element value="Inklura\SEO"/>
+				<element value="INKLURA_SEO"/>
+			</property>
+		</properties>
+	</rule>
+</ruleset>

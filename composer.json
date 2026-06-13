@@ -1,0 +1,37 @@
+{
+	"name": "webdesign29/inklura-seo",
+	"description": "Lightweight, dependency-free SEO for WordPress: titles, meta description, canonical, robots, Open Graph + Twitter Cards, an XML sitemap, JSON-LD schema, and a per-post SEO meta box. Multisite-safe.",
+	"type": "wordpress-plugin",
+	"license": "GPL-2.0-or-later",
+	"keywords": ["wordpress", "seo", "sitemap", "open-graph", "schema", "json-ld", "meta-tags"],
+	"homepage": "https://github.com/webdesign29/inklura-seo",
+	"authors": [
+		{
+			"name": "webdesign29",
+			"homepage": "https://webdesign29.net"
+		}
+	],
+	"require": {
+		"php": ">=7.4"
+	},
+	"require-dev": {
+		"squizlabs/php_codesniffer": "^3.9",
+		"wp-coding-standards/wpcs": "^3.0",
+		"phpcompatibility/phpcompatibility-wp": "^2.1"
+	},
+	"autoload": {
+		"psr-4": {
+			"Inklura\\SEO\\": "src/"
+		}
+	},
+	"scripts": {
+		"lint": "find . -path ./vendor -prune -o -name '*.php' -print0 | xargs -0 -n1 php -l",
+		"phpcs": "phpcs",
+		"phpcbf": "phpcbf"
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
+	}
+}

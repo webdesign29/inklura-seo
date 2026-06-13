@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  lint:
+    name: PHP lint (${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: [ '7.4', '8.1', '8.3' ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+      - name: Lint all PHP files
+        run: |
+          find . -path ./vendor -prune -o -name '*.php' -print0 \
+            | xargs -0 -n1 -P4 php -l
+      - name: Unit tests (no WP runtime needed)
+        run: |
+          for t in tests/unit/*.php; do
+            echo "== $t =="
+            php "$t" || exit 1
+          done
+
+  phpcs:
+    name: WordPress coding standards (advisory)
+    runs-on: ubuntu-latest
+    # Advisory: reports WPCS issues without failing the build. The check's own
+    # status reflects reality (no `|| true` masking it).
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          coverage: none
+          tools: composer
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress
+      - name: Run phpcs
+        run: vendor/bin/phpcs -q

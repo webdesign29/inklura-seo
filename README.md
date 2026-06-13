@@ -20,12 +20,15 @@ network-wide defaults.
 
 | Module | What it does |
 |---|---|
-| **Titles & meta** | Controls the document `<title>` via a configurable format (`%title% %sep% %sitename%`, with `%tagline%`), plus `meta description`, `rel=canonical`, and a per-post `noindex` robots directive. Falls back to the site name/tagline and the excerpt/content. |
-| **Open Graph / Twitter** | `og:title/description/type/url/image` (from the featured image, or a configurable default), and a `twitter:card = summary_large_image` set. |
-| **XML sitemap** | Serves `/inklura-sitemap.xml` (rewrite rule + query var, no physical file) listing published posts + pages with `<lastmod>`, and advertises it in `robots.txt`. |
-| **JSON-LD schema** | `WebSite` schema on the home page; `Article` schema on singular posts. |
-| **Per-post meta box** | An **Inklura SEO** box on the editor: SEO title, meta description and a noindex checkbox — saved to postmeta with a nonce + capability check. |
-| **Settings** | A **Settings → Inklura SEO** page (Settings API): separator, title format, default OG image, and a toggle per module. |
+| **Titles & meta** | Controls the document `<title>` via a configurable format (`%title% %sep% %sitename%`, with `%tagline%` and `%page%`), plus `meta description`, `rel=canonical`, and a `noindex` robots directive. Falls back to the site name/tagline and the excerpt/content. `%page%` adds a "Page N" suffix on paginated views. |
+| **Open Graph / Twitter** | `og:title/description/type/url/image` with `og:image:width`/`height`, a `twitter:card` set, and an optional `twitter:site` handle. The OG image follows a fallback chain: **per-post override → featured image → site default**. |
+| **XML sitemap** | Serves `/inklura-sitemap.xml`. Above a configurable URL cap it splits into a real **sitemap index** of paginated sub-sitemaps. Covers posts/pages/CPTs, **taxonomy archives** (categories, tags, custom) and **author archives**, with accurate `<lastmod>` and `<image:image>` for featured images. Advertised in `robots.txt`. |
+| **JSON-LD schema** | `WebSite` + an **Organization or Person** entity on the home page (configurable name + logo); `Article` on singular posts; `BreadcrumbList` wherever a multi-level trail exists. |
+| **Breadcrumbs** | A `BreadcrumbList` graph node plus an optional visible trail — `[inklura_breadcrumbs]` shortcode and a `\Inklura\SEO\inklura_seo_breadcrumbs()` template tag. |
+| **Indexing controls** | One-click `noindex` for search results, paginated (page 2+) views, author archives and date archives. |
+| **Per-post meta box** | An **Inklura SEO** box on the editor: SEO title, meta description, social-image (OG) override and a noindex checkbox — saved to postmeta with a nonce + capability check. |
+| **Per-term SEO** | SEO title + meta description on the Add/Edit screens of every public taxonomy — saved to term meta with a nonce + capability check. |
+| **Settings** | A **Settings → Inklura SEO** page (Settings API): separator, title format, default OG image, Twitter handle, home entity, breadcrumbs, sitemap tuning, indexing rules, and a toggle per module. |
 | **Multisite** | Per-blog settings + a **Network → Inklura SEO** defaults page (`get_site_option`). Per-blog values win; unset keys inherit the network default. |
 | **Auto-update** | Self-hosted updates for normal-plugin installs — "update available" + one-click update from a manifest, like a wordpress.org plugin. |
 
@@ -48,15 +51,43 @@ installs (update by redeploying the package).
 Open **Settings → Inklura SEO** in wp-admin:
 
 - **Title separator** — the glyph between title parts.
-- **Title format** — tokens `%title%`, `%sitename%`, `%tagline%`, `%sep%`.
-- **Default OG image** — used when a post has no featured image.
+- **Title format** — tokens `%title%`, `%sitename%`, `%tagline%`, `%sep%`,
+  `%page%`. `%page%` becomes "Page N" on paginated views (and is dropped on
+  page 1); if you omit it, the suffix is appended automatically.
+- **Social** — default OG image (fallback share image) and a Twitter / X
+  `@site` handle (a handle or a profile URL — both work).
+- **Home page entity (schema)** — emit an `Organization` or `Person` node on the
+  home page, with a name (defaults to the site name) and a logo / image URL.
+- **Breadcrumbs** — enable the trail + structured data, and set the home label.
+- **Sitemap** — URLs per sitemap (the split threshold for the index), and
+  whether to include taxonomy archives, author archives and featured images.
+- **Indexing (robots)** — `noindex` search results, paginated pages, author
+  archives and date archives.
 - **Modules** — toggle Titles, Open Graph, Sitemap and Schema independently.
 
-Per post, the **Inklura SEO** meta box overrides the title/description and lets
-you mark the entry `noindex`.
+Per post, the **Inklura SEO** meta box overrides the title/description, sets a
+social-image (OG) override and lets you mark the entry `noindex`. Per term, the
+same box on the Add/Edit term screen sets an SEO title + description.
 
 On multisite, **Network → Inklura SEO** sets defaults that every site inherits
 until it overrides them.
+
+### Breadcrumbs
+
+Drop the shortcode into content or a block:
+
+```text
+[inklura_breadcrumbs separator="›"]
+```
+
+…or call the template tag from a theme template:
+
+```php
+<?php \Inklura\SEO\inklura_seo_breadcrumbs( array( 'separator' => '›' ) ); ?>
+```
+
+The matching `BreadcrumbList` JSON-LD is emitted automatically by the schema
+module wherever the trail has more than one level.
 
 ### Constants
 
@@ -68,8 +99,11 @@ define( 'INKLURA_SEO_UPDATE_URL', 'https://…/update' ); // override update man
 ## Hooks
 
 ```php
-// Adjust the sitemap entry list (array of { loc, lastmod }).
+// Adjust the content sitemap entries (array of { loc, lastmod, images? }).
 add_filter( 'inklura/seo/sitemap_entries', function ( $entries ) { return $entries; } );
+
+// Adjust the sitemap-index spec list (array of { loc, lastmod }).
+add_filter( 'inklura/seo/sitemap_index', function ( $specs ) { return $specs; } );
 
 // Override the update manifest URL.
 add_filter( 'inklura/inklura-seo/update_manifest_url', function ( $url ) { return $url; } );

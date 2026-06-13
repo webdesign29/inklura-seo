@@ -1,8 +1,11 @@
 <?php
 /**
- * JSON-LD structured data.
+ * JSON-LD structured data (a single @graph).
  *
- * WebSite schema on the home page; Article schema on singular posts.
+ *   - Home page: WebSite + an Organization OR Person node (configurable name +
+ *     logo URL in settings).
+ *   - Singular posts: Article.
+ *   - Any page with a multi-level trail: BreadcrumbList.
  *
  * @package Inklura\SEO
  */
@@ -59,53 +62,117 @@ class Schema {
 				'description' => (string) get_bloginfo( 'description' ),
 				'inLanguage'  => $this->language(),
 			);
-			return $nodes;
+			$publisher = $this->home_entity();
+			if ( null !== $publisher ) {
+				$nodes[] = $publisher;
+			}
 		}
 
 		if ( is_singular( 'post' ) ) {
 			$id = (int) get_queried_object_id();
-			if ( $id <= 0 ) {
-				return $nodes;
-			}
-			$post = get_post( $id );
-			if ( ! $post ) {
-				return $nodes;
-			}
+			if ( $id > 0 ) {
+				$post = get_post( $id );
+				if ( $post ) {
+					$frontend = $this->plugin->module( 'frontend' );
+					$desc     = $frontend instanceof Frontend ? $frontend->description() : '';
 
-			$frontend = $this->plugin->module( 'frontend' );
-			$desc     = $frontend instanceof Frontend ? $frontend->description() : '';
-
-			$article = array(
-				'@type'         => 'Article',
-				'@id'           => (string) get_permalink( $id ) . '#article',
-				'mainEntityOfPage' => (string) get_permalink( $id ),
-				'headline'      => (string) get_the_title( $id ),
-				'datePublished' => (string) get_post_time( 'c', true, $id ),
-				'dateModified'  => (string) get_post_modified_time( 'c', true, $id ),
-				'inLanguage'    => $this->language(),
-				'author'        => array(
-					'@type' => 'Person',
-					'name'  => (string) get_the_author_meta( 'display_name', (int) $post->post_author ),
-				),
-				'publisher'     => array(
-					'@type' => 'Organization',
-					'name'  => (string) get_bloginfo( 'name' ),
-					'url'   => (string) home_url( '/' ),
-				),
-			);
-			if ( '' !== $desc ) {
-				$article['description'] = $desc;
-			}
-			if ( has_post_thumbnail( $id ) ) {
-				$img = get_the_post_thumbnail_url( $id, 'full' );
-				if ( $img ) {
-					$article['image'] = (string) $img;
+					$article = array(
+						'@type'            => 'Article',
+						'@id'              => (string) get_permalink( $id ) . '#article',
+						'mainEntityOfPage' => (string) get_permalink( $id ),
+						'headline'         => (string) get_the_title( $id ),
+						'datePublished'    => (string) get_post_time( 'c', true, $id ),
+						'dateModified'     => (string) get_post_modified_time( 'c', true, $id ),
+						'inLanguage'       => $this->language(),
+						'author'           => array(
+							'@type' => 'Person',
+							'name'  => (string) get_the_author_meta( 'display_name', (int) $post->post_author ),
+						),
+						'publisher'        => array(
+							'@type' => 'Organization',
+							'name'  => (string) get_bloginfo( 'name' ),
+							'url'   => (string) home_url( '/' ),
+						),
+					);
+					if ( '' !== $desc ) {
+						$article['description'] = $desc;
+					}
+					if ( has_post_thumbnail( $id ) ) {
+						$img = get_the_post_thumbnail_url( $id, 'full' );
+						if ( $img ) {
+							$article['image'] = (string) $img;
+						}
+					}
+					$nodes[] = $article;
 				}
 			}
-			$nodes[] = $article;
+		}
+
+		// BreadcrumbList: emitted alongside whatever else applies, when the
+		// breadcrumbs module is active and the trail has more than one level.
+		$crumbs_node = $this->breadcrumb_node();
+		if ( null !== $crumbs_node ) {
+			$nodes[] = $crumbs_node;
 		}
 
 		return $nodes;
+	}
+
+	/**
+	 * The home-page publisher entity (Organization or Person), or null when
+	 * disabled. Name falls back to the site name; logo is optional.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	private function home_entity() {
+		$type = (string) $this->options->get( 'home_schema_type', 'organization' );
+		if ( 'none' === $type ) {
+			return null;
+		}
+		$schema_type = 'person' === $type ? 'Person' : 'Organization';
+
+		$name = trim( (string) $this->options->get( 'home_schema_name', '' ) );
+		if ( '' === $name ) {
+			$name = (string) get_bloginfo( 'name' );
+		}
+
+		$node = array(
+			'@type' => $schema_type,
+			'@id'   => trailingslashit( (string) home_url( '/' ) ) . '#' . strtolower( $schema_type ),
+			'name'  => $name,
+			'url'   => (string) home_url( '/' ),
+		);
+
+		$logo = trim( (string) $this->options->get( 'home_schema_logo', '' ) );
+		if ( '' !== $logo ) {
+			if ( 'Organization' === $schema_type ) {
+				$node['logo'] = array(
+					'@type' => 'ImageObject',
+					'url'   => $logo,
+				);
+			} else {
+				$node['image'] = $logo;
+			}
+		}
+
+		return $node;
+	}
+
+	/**
+	 * BreadcrumbList graph node for the current request, or null when the
+	 * breadcrumbs module is disabled / there is no multi-level trail.
+	 *
+	 * @return array<string,mixed>|null
+	 */
+	private function breadcrumb_node() {
+		if ( ! $this->options->module_enabled( 'breadcrumbs' ) ) {
+			return null;
+		}
+		$module = $this->plugin->module( 'breadcrumbs' );
+		if ( ! ( $module instanceof Breadcrumbs ) ) {
+			return null;
+		}
+		return Breadcrumbs::json_ld( $module->crumbs() );
 	}
 
 	private function language(): string {

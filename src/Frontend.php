@@ -72,16 +72,18 @@ class Frontend {
 	 * @return string
 	 */
 	public function pre_document_title( $title ) {
+		$sitename = (string) get_bloginfo( 'name' );
+		$tagline  = (string) get_bloginfo( 'description' );
+		$format   = (string) $this->options->get( 'title_format', '%title% %sep% %sitename%' );
+		$page     = $this->current_page();
+
 		$custom = $this->current_seo_title();
 		if ( '' !== $custom ) {
-			return $custom;
+			// A per-post/term SEO title still gets the %page% suffix on page 2+.
+			return Options::format_title_paged( '%title%', $custom, $sitename, $this->separator(), $tagline, $page, $this->page_word() );
 		}
 
 		$page_title = $this->context_title();
-		$sitename   = (string) get_bloginfo( 'name' );
-		$tagline    = (string) get_bloginfo( 'description' );
-
-		$format = (string) $this->options->get( 'title_format', '%title% %sep% %sitename%' );
 
 		// On the front page with no real "page title", drop %title% so we don't
 		// get a dangling separator.
@@ -89,7 +91,7 @@ class Frontend {
 			$page_title = $tagline;
 		}
 
-		return Options::format_title( $format, $page_title, $sitename, $this->separator(), $tagline );
+		return Options::format_title_paged( $format, $page_title, $sitename, $this->separator(), $tagline, $page, $this->page_word() );
 	}
 
 	/**
@@ -108,7 +110,9 @@ class Frontend {
 	}
 
 	/**
-	 * Add noindex,nofollow to the robots directive for posts flagged noindex.
+	 * Add noindex,nofollow to the robots directive for posts flagged noindex and
+	 * for archive contexts disabled via settings (search / paginated / author /
+	 * date archives).
 	 *
 	 * @param array<string,bool|string> $robots
 	 * @return array<string,bool|string>
@@ -125,6 +129,20 @@ class Frontend {
 		return $robots;
 	}
 
+	/** The current paged number (1 for the first / unpaged view). */
+	private function current_page(): int {
+		$paged = (int) get_query_var( 'paged' );
+		if ( $paged < 1 ) {
+			$paged = (int) get_query_var( 'page' ); // single-post pagination (<!--nextpage-->)
+		}
+		return $paged > 1 ? $paged : 1;
+	}
+
+	/** Localized word used in "%page% N" suffixes. */
+	private function page_word(): string {
+		return __( 'Page', 'inklura-seo' );
+	}
+
 	// -----------------------------------------------------------------
 	// Value resolution
 	// -----------------------------------------------------------------
@@ -136,17 +154,24 @@ class Frontend {
 		return isset( $map[ $key ] ) ? $map[ $key ] : $key;
 	}
 
-	/** Per-post SEO title override, or '' if none / not singular. */
+	/** Per-post / per-term SEO title override, or '' if none. */
 	private function current_seo_title(): string {
-		if ( ! is_singular() ) {
-			return '';
+		if ( is_singular() ) {
+			$id = (int) get_queried_object_id();
+			if ( $id <= 0 ) {
+				return '';
+			}
+			$val = get_post_meta( $id, MetaBox::META_TITLE, true );
+			return is_string( $val ) ? trim( $val ) : '';
 		}
-		$id = (int) get_queried_object_id();
-		if ( $id <= 0 ) {
-			return '';
+		if ( is_category() || is_tag() || is_tax() ) {
+			$obj = get_queried_object();
+			if ( $obj && isset( $obj->term_id ) ) {
+				$val = get_term_meta( (int) $obj->term_id, TermMeta::META_TITLE, true );
+				return is_string( $val ) ? trim( $val ) : '';
+			}
 		}
-		$val = get_post_meta( $id, MetaBox::META_TITLE, true );
-		return is_string( $val ) ? trim( $val ) : '';
+		return '';
 	}
 
 	/** A human title for the current context (post/page/archive/etc.). */
@@ -190,6 +215,19 @@ class Frontend {
 				}
 			}
 		}
+		if ( is_category() || is_tag() || is_tax() ) {
+			$obj = get_queried_object();
+			if ( $obj && isset( $obj->term_id ) ) {
+				$custom = get_term_meta( (int) $obj->term_id, TermMeta::META_DESC, true );
+				if ( is_string( $custom ) && '' !== trim( $custom ) ) {
+					return Options::summarize( $custom, 160 );
+				}
+				$term_desc = (string) term_description( (int) $obj->term_id );
+				if ( '' !== trim( $term_desc ) ) {
+					return Options::summarize( $term_desc, 160 );
+				}
+			}
+		}
 		// Home / fallback: the site tagline.
 		return Options::summarize( (string) get_bloginfo( 'description' ), 160 );
 	}
@@ -216,15 +254,26 @@ class Frontend {
 		return '';
 	}
 
-	/** Whether the current singular object is flagged noindex. */
+	/**
+	 * Whether the current request should be noindex: either the per-post checkbox
+	 * is set, or an archive context is disabled via the settings-driven rules.
+	 */
 	public function is_noindex(): bool {
-		if ( ! is_singular() ) {
-			return false;
+		// Per-post flag.
+		if ( is_singular() ) {
+			$id = (int) get_queried_object_id();
+			if ( $id > 0 && '1' === (string) get_post_meta( $id, MetaBox::META_NOINDEX, true ) ) {
+				return true;
+			}
 		}
-		$id = (int) get_queried_object_id();
-		if ( $id <= 0 ) {
-			return false;
-		}
-		return '1' === (string) get_post_meta( $id, MetaBox::META_NOINDEX, true );
+
+		// Settings-driven archive rules (pure decision, unit-tested).
+		$ctx = array(
+			'is_search' => is_search(),
+			'is_paged'  => $this->current_page() > 1,
+			'is_author' => is_author(),
+			'is_date'   => is_date(),
+		);
+		return Options::archive_noindex( $ctx, $this->options->all() );
 	}
 }

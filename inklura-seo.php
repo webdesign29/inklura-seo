@@ -3,7 +3,7 @@
  * Plugin Name:       Inklura SEO
  * Plugin URI:        https://github.com/webdesign29/inklura-seo
  * Description:        Lightweight, dependency-free SEO for WordPress: titles, meta description, canonical, robots, Open Graph + Twitter Cards, an XML sitemap, JSON-LD schema, and a per-post SEO meta box. Multisite-safe.
- * Version:           0.1.0
+ * Version:           0.2.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            webdesign29
@@ -26,7 +26,7 @@ if ( defined( 'INKLURA_SEO_VERSION' ) ) {
 	return;
 }
 
-define( 'INKLURA_SEO_VERSION', '0.1.0' );
+define( 'INKLURA_SEO_VERSION', '0.2.0' );
 define( 'INKLURA_SEO_FILE', __FILE__ );
 define( 'INKLURA_SEO_DIR', __DIR__ );
 // Must-use installs can't self-update through wp-admin (a fleet deploy handles

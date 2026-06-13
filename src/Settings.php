@@ -98,8 +98,46 @@ class Settings {
 			? esc_url_raw( trim( (string) wp_unslash( $in['default_og_image'] ) ) )
 			: '';
 
-		// Module toggles.
-		foreach ( array( 'enable_titles', 'enable_og', 'enable_sitemap', 'enable_schema' ) as $flag ) {
+		// Twitter @site handle, normalized.
+		$out['twitter_site'] = OpenGraph::normalize_handle(
+			isset( $in['twitter_site'] ) ? (string) wp_unslash( $in['twitter_site'] ) : ''
+		);
+
+		// Home-page schema entity.
+		$schema_type             = isset( $in['home_schema_type'] ) ? (string) $in['home_schema_type'] : 'organization';
+		$out['home_schema_type'] = in_array( $schema_type, array( 'organization', 'person', 'none' ), true ) ? $schema_type : 'organization';
+		$out['home_schema_name'] = isset( $in['home_schema_name'] ) ? sanitize_text_field( wp_unslash( $in['home_schema_name'] ) ) : '';
+		$out['home_schema_logo'] = isset( $in['home_schema_logo'] ) ? esc_url_raw( trim( (string) wp_unslash( $in['home_schema_logo'] ) ) ) : '';
+
+		// Breadcrumbs.
+		$home_label                  = isset( $in['breadcrumb_home_label'] ) ? sanitize_text_field( wp_unslash( $in['breadcrumb_home_label'] ) ) : '';
+		$out['breadcrumb_home_label'] = '' !== $home_label ? $home_label : 'Home';
+
+		// Sitemap tuning.
+		$max                     = isset( $in['sitemap_max_urls'] ) ? (int) $in['sitemap_max_urls'] : 1000;
+		if ( $max < 1 ) {
+			$max = 1;
+		}
+		if ( $max > 50000 ) {
+			$max = 50000;
+		}
+		$out['sitemap_max_urls'] = $max;
+
+		// Module toggles + boolean feature flags.
+		foreach ( array(
+			'enable_titles',
+			'enable_og',
+			'enable_sitemap',
+			'enable_schema',
+			'enable_breadcrumbs',
+			'sitemap_taxonomies',
+			'sitemap_authors',
+			'sitemap_images',
+			'noindex_search',
+			'noindex_paged',
+			'noindex_author',
+			'noindex_date',
+		) as $flag ) {
 			$out[ $flag ] = empty( $in[ $flag ] ) ? 0 : 1;
 		}
 
@@ -145,7 +183,8 @@ class Settings {
 			__( 'Title format', 'inklura-seo' ),
 			$this->text( 'title_format', (string) $g( 'title_format', '%title% %sep% %sitename%' ), '%title% %sep% %sitename%', 'large-text code' )
 			. '<p class="description">' . esc_html__( 'Tokens:', 'inklura-seo' )
-			. ' <code>%title%</code> <code>%sitename%</code> <code>%tagline%</code> <code>%sep%</code></p>'
+			. ' <code>%title%</code> <code>%sitename%</code> <code>%tagline%</code> <code>%sep%</code> <code>%page%</code>'
+			. ' &mdash; ' . esc_html__( '%page% is replaced with the page suffix on paginated views (and dropped on page 1).', 'inklura-seo' ) . '</p>'
 		);
 		echo '</tbody></table>';
 
@@ -154,8 +193,64 @@ class Settings {
 		$this->row(
 			__( 'Default OG image URL', 'inklura-seo' ),
 			$this->text( 'default_og_image', (string) $g( 'default_og_image', '' ), 'https://example.com/social.png', 'large-text code' )
-			. '<p class="description">' . esc_html__( 'Used when a post has no featured image.', 'inklura-seo' ) . '</p>'
+			. '<p class="description">' . esc_html__( 'Fallback share image when a post has no OG override and no featured image.', 'inklura-seo' ) . '</p>'
 		);
+		$this->row(
+			__( 'Twitter / X @site handle', 'inklura-seo' ),
+			$this->text( 'twitter_site', (string) $g( 'twitter_site', '' ), '@yoursite' )
+			. '<p class="description">' . esc_html__( 'Output as twitter:site. A handle or a profile URL — both are accepted.', 'inklura-seo' ) . '</p>'
+		);
+		echo '</tbody></table>';
+
+		echo '<h2>' . esc_html__( 'Home page entity (schema)', 'inklura-seo' ) . '</h2>';
+		echo '<table class="form-table" role="presentation"><tbody>';
+		$this->row(
+			__( 'Entity type', 'inklura-seo' ),
+			$this->select_home_schema( (string) $g( 'home_schema_type', 'organization' ) )
+			. '<p class="description">' . esc_html__( 'Emit an Organization or Person node on the home page (or none).', 'inklura-seo' ) . '</p>'
+		);
+		$this->row(
+			__( 'Entity name', 'inklura-seo' ),
+			$this->text( 'home_schema_name', (string) $g( 'home_schema_name', '' ), (string) get_bloginfo( 'name' ) )
+			. '<p class="description">' . esc_html__( 'Leave blank to use the site name.', 'inklura-seo' ) . '</p>'
+		);
+		$this->row(
+			__( 'Logo / image URL', 'inklura-seo' ),
+			$this->text( 'home_schema_logo', (string) $g( 'home_schema_logo', '' ), 'https://example.com/logo.png', 'large-text code' )
+		);
+		echo '</tbody></table>';
+
+		echo '<h2>' . esc_html__( 'Breadcrumbs', 'inklura-seo' ) . '</h2>';
+		echo '<table class="form-table" role="presentation"><tbody>';
+		$this->row( __( 'Enable breadcrumbs', 'inklura-seo' ), $this->checkbox( 'enable_breadcrumbs', $g( 'enable_breadcrumbs', 1 ), __( 'BreadcrumbList structured data + the [inklura_breadcrumbs] shortcode / template tag', 'inklura-seo' ) ) );
+		$this->row(
+			__( 'Home crumb label', 'inklura-seo' ),
+			$this->text( 'breadcrumb_home_label', (string) $g( 'breadcrumb_home_label', 'Home' ), 'Home' )
+		);
+		echo '</tbody></table>';
+
+		echo '<h2>' . esc_html__( 'Sitemap', 'inklura-seo' ) . '</h2>';
+		echo '<table class="form-table" role="presentation"><tbody>';
+		$this->row(
+			__( 'URLs per sitemap', 'inklura-seo' ),
+			sprintf(
+				'<input type="number" min="1" max="50000" name="%s" value="%s" class="small-text" />',
+				esc_attr( $this->name( 'sitemap_max_urls' ) ),
+				esc_attr( (string) (int) $g( 'sitemap_max_urls', 1000 ) )
+			)
+			. '<p class="description">' . esc_html__( 'Above this, the sitemap splits into a real index of paginated sub-sitemaps.', 'inklura-seo' ) . '</p>'
+		);
+		$this->row( __( 'Include taxonomy archives', 'inklura-seo' ), $this->checkbox( 'sitemap_taxonomies', $g( 'sitemap_taxonomies', 1 ), __( 'Categories, tags and public custom taxonomies', 'inklura-seo' ) ) );
+		$this->row( __( 'Include author archives', 'inklura-seo' ), $this->checkbox( 'sitemap_authors', $g( 'sitemap_authors', 1 ), __( 'Authors who have published content', 'inklura-seo' ) ) );
+		$this->row( __( 'Include featured images', 'inklura-seo' ), $this->checkbox( 'sitemap_images', $g( 'sitemap_images', 1 ), __( 'Add <image:image> for entries with a featured image', 'inklura-seo' ) ) );
+		echo '</tbody></table>';
+
+		echo '<h2>' . esc_html__( 'Indexing (robots)', 'inklura-seo' ) . '</h2>';
+		echo '<table class="form-table" role="presentation"><tbody>';
+		$this->row( __( 'Search results', 'inklura-seo' ), $this->checkbox( 'noindex_search', $g( 'noindex_search', 1 ), __( 'noindex search-result pages', 'inklura-seo' ) ) );
+		$this->row( __( 'Paginated pages', 'inklura-seo' ), $this->checkbox( 'noindex_paged', $g( 'noindex_paged', 0 ), __( 'noindex page 2+ of archives / paginated content', 'inklura-seo' ) ) );
+		$this->row( __( 'Author archives', 'inklura-seo' ), $this->checkbox( 'noindex_author', $g( 'noindex_author', 0 ), __( 'noindex author archive pages', 'inklura-seo' ) ) );
+		$this->row( __( 'Date archives', 'inklura-seo' ), $this->checkbox( 'noindex_date', $g( 'noindex_date', 0 ), __( 'noindex date-based archive pages', 'inklura-seo' ) ) );
 		echo '</tbody></table>';
 
 		echo '<h2>' . esc_html__( 'Modules', 'inklura-seo' ) . '</h2>';
@@ -163,7 +258,7 @@ class Settings {
 		$this->row( __( 'Titles & meta', 'inklura-seo' ), $this->checkbox( 'enable_titles', $g( 'enable_titles', 1 ), __( 'Output document title, meta description, canonical and robots', 'inklura-seo' ) ) );
 		$this->row( __( 'Open Graph / Twitter', 'inklura-seo' ), $this->checkbox( 'enable_og', $g( 'enable_og', 1 ), __( 'Output Open Graph + Twitter Card tags', 'inklura-seo' ) ) );
 		$this->row( __( 'XML sitemap', 'inklura-seo' ), $this->checkbox( 'enable_sitemap', $g( 'enable_sitemap', 1 ), __( 'Serve /inklura-sitemap.xml and advertise it in robots.txt', 'inklura-seo' ) ) );
-		$this->row( __( 'JSON-LD schema', 'inklura-seo' ), $this->checkbox( 'enable_schema', $g( 'enable_schema', 1 ), __( 'Output WebSite (home) and Article (posts) structured data', 'inklura-seo' ) ) );
+		$this->row( __( 'JSON-LD schema', 'inklura-seo' ), $this->checkbox( 'enable_schema', $g( 'enable_schema', 1 ), __( 'Output WebSite/Organization (home), Article (posts) and BreadcrumbList data', 'inklura-seo' ) ) );
 		echo '</tbody></table>';
 
 		submit_button( __( 'Save settings', 'inklura-seo' ) );
@@ -226,6 +321,24 @@ class Settings {
 				esc_attr( (string) $key ),
 				selected( $value, (string) $key, false ),
 				esc_html( $glyph )
+			);
+		}
+		return $out . '</select>';
+	}
+
+	private function select_home_schema( string $value ): string {
+		$choices = array(
+			'organization' => __( 'Organization', 'inklura-seo' ),
+			'person'       => __( 'Person', 'inklura-seo' ),
+			'none'         => __( 'None', 'inklura-seo' ),
+		);
+		$out = '<select name="' . esc_attr( $this->name( 'home_schema_type' ) ) . '">';
+		foreach ( $choices as $key => $label ) {
+			$out .= sprintf(
+				'<option value="%s" %s>%s</option>',
+				esc_attr( $key ),
+				selected( $value, $key, false ),
+				esc_html( $label )
 			);
 		}
 		return $out . '</select>';

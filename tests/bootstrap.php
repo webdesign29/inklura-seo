@@ -15,19 +15,21 @@
 
 defined( 'ABSPATH' ) || define( 'ABSPATH', __DIR__ . '/' );
 
-$GLOBALS['_inkseo_opts']      = array();
-$GLOBALS['_inkseo_netopts']   = array();
-$GLOBALS['_inkseo_st']        = array();
-$GLOBALS['_inkseo_filters']   = array();
-$GLOBALS['_inkseo_multisite'] = false;
+$GLOBALS['_inkseo_opts']        = array();
+$GLOBALS['_inkseo_netopts']     = array();
+$GLOBALS['_inkseo_st']          = array();
+$GLOBALS['_inkseo_filters']     = array();
+$GLOBALS['_inkseo_shortcodes']  = array();
+$GLOBALS['_inkseo_multisite']   = false;
 
 /** Reset all mutable test state between scenarios. */
 function inkseo_test_reset() {
-	$GLOBALS['_inkseo_opts']      = array();
-	$GLOBALS['_inkseo_netopts']   = array();
-	$GLOBALS['_inkseo_st']        = array();
-	$GLOBALS['_inkseo_filters']   = array();
-	$GLOBALS['_inkseo_multisite'] = false;
+	$GLOBALS['_inkseo_opts']       = array();
+	$GLOBALS['_inkseo_netopts']    = array();
+	$GLOBALS['_inkseo_st']         = array();
+	$GLOBALS['_inkseo_filters']    = array();
+	$GLOBALS['_inkseo_shortcodes'] = array();
+	$GLOBALS['_inkseo_multisite']  = false;
 }
 
 if ( ! function_exists( 'get_option' ) ) {
@@ -117,14 +119,41 @@ if ( ! function_exists( 'get_option' ) ) {
 	function sanitize_text_field( $s ) {
 		return trim( preg_replace( '/[\r\n\t]+/', ' ', (string) $s ) );
 	}
+	function sanitize_textarea_field( $s ) {
+		return trim( (string) $s );
+	}
 	function esc_url_raw( $s ) {
 		return trim( (string) $s );
+	}
+	function esc_url( $s ) {
+		// Simplified core-ish behaviour: ampersands become &#038; entities.
+		return str_replace( '&', '&#038;', (string) $s );
+	}
+	function esc_html( $s ) {
+		return htmlspecialchars( (string) $s, ENT_QUOTES, 'UTF-8' );
+	}
+	function esc_attr( $s ) {
+		return htmlspecialchars( (string) $s, ENT_QUOTES, 'UTF-8' );
 	}
 	function wp_json_encode( $v ) {
 		return json_encode( $v );
 	}
 	function wp_strip_all_tags( $s ) {
 		return trim( preg_replace( '/<[^>]*>/', ' ', (string) $s ) );
+	}
+
+	// --- shortcodes (only the bits Breadcrumbs touches at file-load time) ---
+	function add_shortcode( $tag, $cb ) {
+		$GLOBALS['_inkseo_shortcodes'][ $tag ] = $cb;
+		return true;
+	}
+	function shortcode_atts( $defaults, $atts, $shortcode = '' ) {
+		$atts = is_array( $atts ) ? $atts : array();
+		$out  = array();
+		foreach ( (array) $defaults as $k => $v ) {
+			$out[ $k ] = array_key_exists( $k, $atts ) ? $atts[ $k ] : $v;
+		}
+		return $out;
 	}
 }
 

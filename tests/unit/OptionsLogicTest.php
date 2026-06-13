@@ -1,11 +1,15 @@
 <?php
 /**
  * Unit tests for the pure, WP-free SEO logic:
- *   - Options::format_title()  (token substitution + separator cleanup)
- *   - Options::summarize()     (tag strip + word-boundary truncation)
- *   - Sitemap::build_xml()     (urlset rendering + XML escaping)
- *   - Sitemap::sitemap_url()   (absolute sitemap URL)
- *   - Options merge precedence (defaults ⊕ network ⊕ per-blog)
+ *   - Options::format_title()        (token substitution + separator cleanup)
+ *   - Options::format_title_paged()  (%page% + pagination suffixing)
+ *   - Options::summarize()           (tag strip + word-boundary truncation)
+ *   - Options::og_image_chain()      (post override → featured → default)
+ *   - Options::archive_noindex()     (settings-driven noindex decisions)
+ *   - Options::chunk_entries()       (sitemap index splitting)
+ *   - Sitemap::build_xml()           (urlset rendering + XML escaping)
+ *   - Sitemap::sitemap_url()         (absolute sitemap URL)
+ *   - Options merge precedence       (defaults ⊕ network ⊕ per-blog, incl. 0.2.0 keys)
  *
  * Run: php tests/unit/OptionsLogicTest.php
  *
@@ -71,6 +75,130 @@ $check(
 );
 
 // ---------------------------------------------------------------------
+// format_title_paged (%page% + pagination)
+// ---------------------------------------------------------------------
+// Page 1 (unpaged): no suffix, %page% token dropped cleanly.
+$check(
+	'Hello - My Site' === Options::format_title_paged( '%title% %sep% %sitename% %sep% %page%', 'Hello', 'My Site', '-', '', 1 ),
+	'format_title_paged: %page% dropped on page 1 (no dangling separator)'
+);
+// Page 2 with explicit %page% token.
+$check(
+	'Hello - My Site - Page 2' === Options::format_title_paged( '%title% %sep% %sitename% %sep% %page%', 'Hello', 'My Site', '-', '', 2 ),
+	'format_title_paged: %page% expands to "Page 2" on page 2'
+);
+// Page 3, %page% in the middle.
+$check(
+	'Hello - Page 3 - My Site' === Options::format_title_paged( '%title% %sep% %page% %sep% %sitename%', 'Hello', 'My Site', '-', '', 3 ),
+	'format_title_paged: %page% in the middle on page 3'
+);
+// No %page% token but paginated → suffix is appended.
+$check(
+	'Hello - My Site - Page 4' === Options::format_title_paged( '%title% %sep% %sitename%', 'Hello', 'My Site', '-', '', 4 ),
+	'format_title_paged: appends suffix when format has no %page% token'
+);
+// No %page% token, page 1 → unchanged.
+$check(
+	'Hello - My Site' === Options::format_title_paged( '%title% %sep% %sitename%', 'Hello', 'My Site', '-', '', 1 ),
+	'format_title_paged: page 1 with no token is unchanged'
+);
+// Localized page word.
+$check(
+	'Hi - Site - Página 2' === Options::format_title_paged( '%title% %sep% %sitename%', 'Hi', 'Site', '-', '', 2, 'Página' ),
+	'format_title_paged: honours a localized page word'
+);
+// Alternate separator carries into the appended suffix.
+$check(
+	'A » B » Page 2' === Options::format_title_paged( '%title% %sep% %sitename%', 'A', 'B', '»', '', 2 ),
+	'format_title_paged: appended suffix uses the configured separator'
+);
+
+// ---------------------------------------------------------------------
+// og_image_chain (post override → featured → default)
+// ---------------------------------------------------------------------
+$check(
+	'https://x/override.png' === Options::og_image_chain( 'https://x/override.png', 'https://x/feat.png', 'https://x/def.png' ),
+	'og_image_chain: post override wins'
+);
+$check(
+	'https://x/feat.png' === Options::og_image_chain( '', 'https://x/feat.png', 'https://x/def.png' ),
+	'og_image_chain: featured used when no override'
+);
+$check(
+	'https://x/def.png' === Options::og_image_chain( '', '', 'https://x/def.png' ),
+	'og_image_chain: default used when no override + no featured'
+);
+$check(
+	'' === Options::og_image_chain( '', '', '' ),
+	'og_image_chain: empty when nothing set'
+);
+$check(
+	'https://x/feat.png' === Options::og_image_chain( '   ', 'https://x/feat.png', 'https://x/def.png' ),
+	'og_image_chain: whitespace-only override is skipped'
+);
+
+// ---------------------------------------------------------------------
+// archive_noindex (settings-driven decision logic)
+// ---------------------------------------------------------------------
+$opts_idx = array(
+	'noindex_search' => 1,
+	'noindex_paged'  => 0,
+	'noindex_author' => 0,
+	'noindex_date'   => 0,
+);
+$check(
+	true === Options::archive_noindex( array( 'is_search' => true ), $opts_idx ),
+	'archive_noindex: search noindexed when enabled'
+);
+$check(
+	false === Options::archive_noindex( array( 'is_paged' => true ), $opts_idx ),
+	'archive_noindex: paged NOT noindexed when its flag is off'
+);
+$check(
+	true === Options::archive_noindex( array( 'is_author' => true ), array( 'noindex_author' => 1 ) ),
+	'archive_noindex: author noindexed when enabled'
+);
+$check(
+	true === Options::archive_noindex( array( 'is_date' => true ), array( 'noindex_date' => 1 ) ),
+	'archive_noindex: date noindexed when enabled'
+);
+$check(
+	false === Options::archive_noindex( array(), $opts_idx ),
+	'archive_noindex: nothing matches → not noindexed'
+);
+$check(
+	true === Options::archive_noindex( array( 'is_search' => true, 'is_paged' => true ), array( 'noindex_search' => 0, 'noindex_paged' => 1 ) ),
+	'archive_noindex: any matching rule triggers (paged here)'
+);
+
+// ---------------------------------------------------------------------
+// chunk_entries (sitemap index splitting)
+// ---------------------------------------------------------------------
+$mk_entries = function ( $n ) {
+	$e = array();
+	for ( $i = 0; $i < $n; $i++ ) {
+		$e[] = array( 'loc' => 'https://x/' . $i, 'lastmod' => '' );
+	}
+	return $e;
+};
+$one = Options::chunk_entries( $mk_entries( 3 ), 5 );
+$check( 1 === count( $one ), 'chunk_entries: small set → single chunk' );
+$check( 3 === count( $one[0] ), 'chunk_entries: single chunk keeps all entries' );
+
+$split = Options::chunk_entries( $mk_entries( 12 ), 5 );
+$check( 3 === count( $split ), 'chunk_entries: 12 entries / 5 per → 3 chunks' );
+$check( 5 === count( $split[0] ) && 5 === count( $split[1] ) && 2 === count( $split[2] ), 'chunk_entries: chunk sizes 5,5,2' );
+
+$exact = Options::chunk_entries( $mk_entries( 10 ), 5 );
+$check( 2 === count( $exact ), 'chunk_entries: exact multiple → 2 chunks' );
+
+$empty = Options::chunk_entries( array(), 5 );
+$check( 1 === count( $empty ) && array() === $empty[0], 'chunk_entries: empty set → one empty chunk' );
+
+$clamped = Options::chunk_entries( $mk_entries( 4 ), 0 );
+$check( 4 === count( $clamped ), 'chunk_entries: per<1 clamps to 1 (one chunk each)' );
+
+// ---------------------------------------------------------------------
 // summarize
 // ---------------------------------------------------------------------
 $check(
@@ -123,7 +251,8 @@ $xml = Sitemap::build_xml(
 	)
 );
 $check( false !== strpos( $xml, '<?xml version="1.0" encoding="UTF-8"?>' ), 'build_xml: has XML prolog' );
-$check( false !== strpos( $xml, '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' ), 'build_xml: has urlset' );
+$check( false !== strpos( $xml, '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"' ), 'build_xml: has urlset' );
+$check( false !== strpos( $xml, 'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"' ), 'build_xml: declares the image namespace' );
 $check( 2 === substr_count( $xml, '<url>' ), 'build_xml: one <url> per entry' );
 $check( false !== strpos( $xml, '<loc>https://example.test/hello-world/</loc>' ), 'build_xml: emits loc' );
 $check( false !== strpos( $xml, '<lastmod>2026-06-13T10:00:00+00:00</lastmod>' ), 'build_xml: emits lastmod when present' );
@@ -162,6 +291,31 @@ $check( false === $opts3->module_enabled( 'og' ), 'options: unset per-blog key i
 update_option( Options::OPTION, array( 'title_separator' => '-', 'evil' => 'x' ) );
 $opts4 = new Options();
 $check( ! array_key_exists( 'evil', $opts4->all() ), 'options: unknown stored keys are filtered out' );
+
+// ---------------------------------------------------------------------
+// New 0.2.0 setting defaults + precedence
+// ---------------------------------------------------------------------
+inkseo_test_reset();
+$opts5 = new Options();
+$check( 'organization' === $opts5->get( 'home_schema_type' ), 'options: home_schema_type defaults to organization' );
+$check( '' === $opts5->get( 'twitter_site' ), 'options: twitter_site defaults to empty' );
+$check( 1000 === (int) $opts5->get( 'sitemap_max_urls' ), 'options: sitemap_max_urls default is 1000' );
+$check( true === $opts5->module_enabled( 'breadcrumbs' ), 'options: breadcrumbs default-enabled' );
+$check( 1 === (int) $opts5->get( 'noindex_search' ), 'options: noindex_search default on' );
+$check( 0 === (int) $opts5->get( 'noindex_paged' ), 'options: noindex_paged default off' );
+$check( 1 === (int) $opts5->get( 'sitemap_taxonomies' ), 'options: sitemap_taxonomies default on' );
+
+// New keys honour the same precedence chain as the originals.
+$GLOBALS['_inkseo_multisite'] = true;
+update_site_option( Options::NETWORK_OPTION, array( 'home_schema_type' => 'person', 'sitemap_max_urls' => 500 ) );
+$opts6 = new Options();
+$check( 'person' === $opts6->get( 'home_schema_type' ), 'options: network default applies to new keys' );
+$check( 500 === (int) $opts6->get( 'sitemap_max_urls' ), 'options: network sitemap_max_urls applied' );
+
+update_option( Options::OPTION, array( 'home_schema_type' => 'none' ) );
+$opts7 = new Options();
+$check( 'none' === $opts7->get( 'home_schema_type' ), 'options: per-blog overrides network for new keys' );
+$check( 500 === (int) $opts7->get( 'sitemap_max_urls' ), 'options: unset per-blog new key inherits network value' );
 
 echo $failures ? "\n$failures failure(s)\n" : "\nall passed\n";
 exit( $failures ? 1 : 0 );

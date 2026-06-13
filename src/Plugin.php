@@ -80,9 +80,10 @@ final class Plugin {
 
 		// Front-end output modules, each gated by its per-blog setting.
 		$front = array(
-			'frontend' => array( Frontend::class, 'titles' ),
-			'opengraph' => array( OpenGraph::class, 'og' ),
-			'schema'   => array( Schema::class, 'schema' ),
+			'frontend'    => array( Frontend::class, 'titles' ),
+			'opengraph'   => array( OpenGraph::class, 'og' ),
+			'schema'      => array( Schema::class, 'schema' ),
+			'breadcrumbs' => array( Breadcrumbs::class, 'breadcrumbs' ),
 		);
 		foreach ( $front as $slug => $info ) {
 			if ( $this->options->module_enabled( $info[1] ) ) {
@@ -97,9 +98,11 @@ final class Plugin {
 			$this->boot_module( 'sitemap', Sitemap::class );
 		}
 
-		// The per-post meta box (admin-only, but its save hook fires on save_post).
+		// The per-post meta box + per-term SEO fields (admin-only, but their save
+		// hooks fire on save_post / created_*term* during normal requests).
 		if ( $want_admin_ui ) {
 			$this->boot_module( 'metabox', MetaBox::class );
+			$this->boot_module( 'termmeta', TermMeta::class );
 			$this->boot_module( 'settings', Settings::class );
 			if ( is_multisite() ) {
 				$this->boot_module( 'network', Network::class );

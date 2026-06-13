@@ -33,13 +33,32 @@ class Options {
 	 */
 	public static function defaults(): array {
 		return array(
-			'title_separator' => '-',
-			'title_format'    => '%title% %sep% %sitename%',
-			'default_og_image' => '',
-			'enable_titles'   => 1,
-			'enable_og'       => 1,
-			'enable_sitemap'  => 1,
-			'enable_schema'   => 1,
+			'title_separator'   => '-',
+			'title_format'      => '%title% %sep% %sitename%',
+			'default_og_image'  => '',
+			'enable_titles'     => 1,
+			'enable_og'         => 1,
+			'enable_sitemap'    => 1,
+			'enable_schema'     => 1,
+			// Organization / Person schema on the home page.
+			'home_schema_type'  => 'organization', // 'organization' | 'person' | 'none'
+			'home_schema_name'  => '',             // falls back to the site name
+			'home_schema_logo'  => '',             // logo / image URL
+			// Social.
+			'twitter_site'      => '',             // @handle for twitter:site
+			// Breadcrumbs.
+			'enable_breadcrumbs' => 1,             // BreadcrumbList JSON-LD + trail
+			'breadcrumb_home_label' => 'Home',
+			// Sitemap tuning.
+			'sitemap_max_urls'  => 1000,           // split into an index above this
+			'sitemap_taxonomies' => 1,             // include public taxonomy archives
+			'sitemap_authors'   => 1,              // include author archives
+			'sitemap_images'    => 1,              // include <image:image> for featured
+			// Robots / noindex controls.
+			'noindex_search'    => 1,              // noindex search-result pages
+			'noindex_paged'     => 0,              // noindex paginated (page 2+) archives
+			'noindex_author'    => 0,              // noindex author archives
+			'noindex_date'      => 0,              // noindex date archives
 		);
 	}
 
@@ -195,6 +214,114 @@ class Options {
 			$cut = mb_substr( $cut, 0, $last_space );
 		}
 		return rtrim( $cut ) . '…';
+	}
+
+	/**
+	 * Build a paginated document title.
+	 *
+	 * Substitutes %page% with the configured page suffix when on page 2+, and
+	 * drops the token entirely on page 1. If the format has no %page% token but
+	 * we're on a paginated view, the suffix is appended with the separator so it
+	 * still reads e.g. "Title - Site - Page 2".
+	 *
+	 * @param string $format    Title format (may contain %page%).
+	 * @param string $title     The page title.
+	 * @param string $sitename  The site name.
+	 * @param string $separator The separator glyph.
+	 * @param string $tagline   The site tagline (optional).
+	 * @param int    $page      Current page number (1 = first / unpaged).
+	 * @param string $page_word The localized word for "Page" (default "Page").
+	 * @return string
+	 */
+	public static function format_title_paged( string $format, string $title, string $sitename, string $separator, string $tagline = '', int $page = 1, string $page_word = 'Page' ): string {
+		$sep      = '' !== trim( $separator ) ? trim( $separator ) : '-';
+		$has_page = false !== strpos( $format, '%page%' );
+		$suffix   = $page > 1 ? trim( $page_word . ' ' . $page ) : '';
+
+		// If the format declares %page%, substitute it (blank on page 1) and let
+		// the standard separator-cleanup collapse any gap left behind.
+		if ( $has_page ) {
+			$work = str_replace( '%page%', $suffix, $format );
+			return self::format_title( $work, $title, $sitename, $sep, $tagline );
+		}
+
+		// No explicit token: format normally, then append the page suffix.
+		$base = self::format_title( $format, $title, $sitename, $sep, $tagline );
+		if ( '' === $suffix ) {
+			return $base;
+		}
+		if ( '' === $base ) {
+			return $suffix;
+		}
+		return $base . ' ' . $sep . ' ' . $suffix;
+	}
+
+	/**
+	 * Resolve the Open Graph image via a fallback chain:
+	 *   per-post OG override → featured image → site default.
+	 * Returns the first non-empty, trimmed URL, or '' if none set.
+	 *
+	 * @param string $post_override The per-post OG image URL ('' if none).
+	 * @param string $featured      The featured-image URL ('' if none).
+	 * @param string $default       The site default OG image URL ('' if none).
+	 * @return string
+	 */
+	public static function og_image_chain( string $post_override, string $featured, string $default ): string {
+		foreach ( array( $post_override, $featured, $default ) as $candidate ) {
+			$candidate = trim( (string) $candidate );
+			if ( '' !== $candidate ) {
+				return $candidate;
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * Pure noindex decision for archive/list contexts, driven by settings.
+	 *
+	 * Singular noindex (the per-post checkbox) is handled separately; this covers
+	 * the settings-driven archive rules so the logic is unit-testable.
+	 *
+	 * @param array<string,bool> $ctx Context booleans: is_search, is_paged,
+	 *                                 is_author, is_date.
+	 * @param array<string,mixed> $opts Effective settings (noindex_* keys).
+	 * @return bool True if the context should be noindex.
+	 */
+	public static function archive_noindex( array $ctx, array $opts ): bool {
+		$flag = static function ( $arr, $key ) {
+			return ! empty( $arr[ $key ] );
+		};
+
+		if ( $flag( $ctx, 'is_search' ) && $flag( $opts, 'noindex_search' ) ) {
+			return true;
+		}
+		if ( $flag( $ctx, 'is_paged' ) && $flag( $opts, 'noindex_paged' ) ) {
+			return true;
+		}
+		if ( $flag( $ctx, 'is_author' ) && $flag( $opts, 'noindex_author' ) ) {
+			return true;
+		}
+		if ( $flag( $ctx, 'is_date' ) && $flag( $opts, 'noindex_date' ) ) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Split a flat list of sitemap entries into pages of at most $per chunks.
+	 * Pure helper so the index/sub-sitemap splitting is unit-testable.
+	 *
+	 * @param array<int,mixed> $entries Flat entry list.
+	 * @param int              $per     Max entries per chunk (clamped to >= 1).
+	 * @return array<int,array<int,mixed>> Re-indexed chunks (1 element if empty).
+	 */
+	public static function chunk_entries( array $entries, int $per ): array {
+		$per = $per > 0 ? $per : 1;
+		if ( count( $entries ) <= $per ) {
+			return array( array_values( $entries ) );
+		}
+		$chunks = array_chunk( array_values( $entries ), $per );
+		return $chunks;
 	}
 }
 

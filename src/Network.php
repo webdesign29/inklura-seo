@@ -58,8 +58,9 @@ class Network {
 		}
 
 		$in  = isset( $_POST['inklura_seo'] ) && is_array( $_POST['inklura_seo'] )
-			? wp_unslash( $_POST['inklura_seo'] )
+			? map_deep( wp_unslash( $_POST['inklura_seo'] ), 'sanitize_text_field' )
 			: array();
+		$in = array_filter( $in, 'is_scalar' );
 		$out = array();
 
 		$sep_keys               = array_keys( Options::separators() );

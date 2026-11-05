@@ -29,16 +29,22 @@ class Frontend {
 
 	public function register(): void {
 		// Take ownership of <title>.
-		add_theme_support( 'title-tag' );
+		add_action( 'after_setup_theme', array( $this, 'title_support' ), 100 );
 		add_filter( 'document_title_separator', array( $this, 'title_separator' ) );
 		add_filter( 'document_title_parts', array( $this, 'title_parts' ) );
 		add_filter( 'pre_get_document_title', array( $this, 'pre_document_title' ) );
 
 		// Meta description, canonical, robots.
 		add_action( 'wp_head', array( $this, 'render_head' ), 1 );
+		remove_action( 'wp_head', 'rel_canonical' );
 
 		// Let WordPress emit its own robots; we add noindex via the filter.
 		add_filter( 'wp_robots', array( $this, 'wp_robots' ) );
+	}
+
+	/** Register theme support at the point WordPress expects it. */
+	public function title_support(): void {
+		add_theme_support( 'title-tag' );
 	}
 
 	/**
@@ -80,7 +86,8 @@ class Frontend {
 		$custom = $this->current_seo_title();
 		if ( '' !== $custom ) {
 			// A per-post/term SEO title still gets the %page% suffix on page 2+.
-			return Options::format_title_paged( '%title%', $custom, $sitename, $this->separator(), $tagline, $page, $this->page_word() );
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Reapply the core formatting bypassed by pre_get_document_title.
+			return apply_filters( 'document_title', Options::format_title_paged( '%title%', $custom, $sitename, $this->separator(), $tagline, $page, $this->page_word() ) );
 		}
 
 		$page_title = $this->context_title();
@@ -91,7 +98,8 @@ class Frontend {
 			$page_title = $tagline;
 		}
 
-		return Options::format_title_paged( $format, $page_title, $sitename, $this->separator(), $tagline, $page, $this->page_word() );
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Reapply WordPress's document-title formatting and escaping.
+		return apply_filters( 'document_title', Options::format_title_paged( $format, $page_title, $sitename, $this->separator(), $tagline, $page, $this->page_word() ) );
 	}
 
 	/**
@@ -156,8 +164,8 @@ class Frontend {
 
 	/** Per-post / per-term SEO title override, or '' if none. */
 	private function current_seo_title(): string {
-		if ( is_singular() ) {
-			$id = (int) get_queried_object_id();
+		if ( is_singular() || ( is_home() && get_option( 'page_for_posts' ) ) ) {
+			$id = is_home() ? (int) get_option( 'page_for_posts' ) : (int) get_queried_object_id();
 			if ( $id <= 0 ) {
 				return '';
 			}
@@ -176,6 +184,12 @@ class Frontend {
 
 	/** A human title for the current context (post/page/archive/etc.). */
 	private function context_title(): string {
+		if ( is_home() && get_option( 'page_for_posts' ) ) {
+			return (string) get_the_title( (int) get_option( 'page_for_posts' ) );
+		}
+		if ( is_404() ) {
+			return __( 'Page not found', 'inklura-seo' );
+		}
 		if ( is_singular() ) {
 			$id = (int) get_queried_object_id();
 			return $id > 0 ? (string) get_the_title( $id ) : '';
@@ -201,9 +215,12 @@ class Frontend {
 
 	/** The meta description for the current context. */
 	public function description(): string {
-		if ( is_singular() ) {
-			$id = (int) get_queried_object_id();
+		if ( is_singular() || ( is_home() && get_option( 'page_for_posts' ) ) ) {
+			$id = is_home() ? (int) get_option( 'page_for_posts' ) : (int) get_queried_object_id();
 			if ( $id > 0 ) {
+				if ( post_password_required( $id ) ) {
+					return '';
+				}
 				$custom = get_post_meta( $id, MetaBox::META_DESC, true );
 				if ( is_string( $custom ) && '' !== trim( $custom ) ) {
 					return Options::summarize( $custom, 160 );
@@ -233,25 +250,47 @@ class Frontend {
 	}
 
 	/** The canonical URL for the current context. */
-	private function canonical_url(): string {
+	public function canonical_url(): string {
+		if ( is_404() || is_search() ) {
+			return '';
+		}
 		if ( is_singular() ) {
 			$id = (int) get_queried_object_id();
-			$link = $id > 0 ? get_permalink( $id ) : '';
+			$link = $id > 0 ? wp_get_canonical_url( $id ) : '';
 			return $link ? (string) $link : '';
 		}
+		$link = '';
 		if ( is_front_page() || is_home() ) {
-			return (string) home_url( '/' );
-		}
-		if ( is_category() || is_tag() || is_tax() ) {
+			$link = is_home() && get_option( 'page_for_posts' )
+				? get_permalink( (int) get_option( 'page_for_posts' ) ) : home_url( '/' );
+		} elseif ( is_category() || is_tag() || is_tax() ) {
 			$obj = get_queried_object();
 			if ( $obj && isset( $obj->term_id ) ) {
 				$link = get_term_link( $obj );
-				if ( ! is_wp_error( $link ) ) {
-					return (string) $link;
-				}
 			}
+		} elseif ( is_author() ) {
+			$link = get_author_posts_url( (int) get_queried_object_id() );
+		} elseif ( is_post_type_archive() ) {
+			$obj = get_queried_object();
+			$link = $obj && isset( $obj->name ) ? get_post_type_archive_link( $obj->name ) : '';
+		} elseif ( is_day() ) {
+			$link = get_day_link( (int) get_query_var( 'year' ), (int) get_query_var( 'monthnum' ), (int) get_query_var( 'day' ) );
+		} elseif ( is_month() ) {
+			$link = get_month_link( (int) get_query_var( 'year' ), (int) get_query_var( 'monthnum' ) );
+		} elseif ( is_year() ) {
+			$link = get_year_link( (int) get_query_var( 'year' ) );
 		}
-		return '';
+		if ( ! $link || is_wp_error( $link ) ) {
+			return '';
+		}
+		$page = (int) get_query_var( 'paged' );
+		if ( $page > 1 ) {
+			global $wp_rewrite;
+			$link = ! get_option( 'permalink_structure' ) || false !== strpos( $link, '?' )
+				? add_query_arg( 'paged', $page, $link )
+				: trailingslashit( $link ) . user_trailingslashit( $wp_rewrite->pagination_base . '/' . $page, 'paged' );
+		}
+		return (string) $link;
 	}
 
 	/**

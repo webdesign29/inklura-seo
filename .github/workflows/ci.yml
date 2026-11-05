@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: [ '7.4', '8.1', '8.3' ]
+        php: [ '7.4', '8.1', '8.3', '8.5' ]
     steps:
       - uses: actions/checkout@v4
       - name: Set up PHP
@@ -28,7 +28,7 @@ jobs:
         run: |
           for t in tests/unit/*.php; do
             echo "== $t =="
-            php "$t" || exit 1
+            php -d disable_functions=mb_strlen,mb_substr,mb_strrpos "$t" || exit 1
           done
 
   phpcs:
@@ -49,3 +49,70 @@ jobs:
         run: composer install --no-interaction --no-progress
       - name: Run phpcs
         run: vendor/bin/phpcs -q
+
+  wordpress:
+    name: WordPress ${{ matrix.wordpress }} / PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - wordpress: '5.8'
+            php: '7.4'
+          - wordpress: latest
+            php: '8.5'
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_DATABASE: inklura_seo_audit
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mysqli, dom, simplexml, xmlreader, xmlwriter
+          coverage: none
+          tools: wp-cli
+      - name: Build and install the directory edition
+        run: |
+          python3 bin/build-wordpress-org.py
+          wp core download --version=${{ matrix.wordpress }} --path=/tmp/inkseo-wp
+          wp config create --path=/tmp/inkseo-wp --dbname=inklura_seo_audit --dbuser=root --dbpass='' --dbhost=127.0.0.1 --extra-php <<'PHP'
+          define('WP_DEBUG', true);
+          define('WP_DEBUG_LOG', true);
+          define('WP_DEBUG_DISPLAY', false);
+          define('DISABLE_WP_CRON', true);
+          PHP
+          wp core install --path=/tmp/inkseo-wp --url=http://127.0.0.1:18079 --title='SEO fixture' --admin_user=audit --admin_password=isolated-fixture --admin_email=audit@example.test --skip-email
+          wp plugin install "$PWD/dist/wordpress-org/inklura-seo.zip" --activate --path=/tmp/inkseo-wp
+      - name: Native metadata, permissions and large sitemap tests
+        run: INKLURA_SEO_LARGE_TEST=1 wp eval-file "$PWD/tests/integration.php" --path=/tmp/inkseo-wp
+      - name: HTTP requests, permalinks and module toggles
+        run: |
+          php -S 127.0.0.1:18079 -t /tmp/inkseo-wp /tmp/inkseo-wp/index.php > /tmp/inkseo-http.log 2>&1 &
+          for attempt in $(seq 1 20); do curl -fsS http://127.0.0.1:18079/ > /dev/null && break; sleep 1; done
+          curl -fsSL https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o /tmp/inkseo-wp-cli.phar
+          python3 tests/http-smoke.py --wp-cli=/tmp/inkseo-wp-cli.phar --wp-root=/tmp/inkseo-wp
+      - name: Network defaults and site isolation
+        run: |
+          wp core multisite-convert --path=/tmp/inkseo-wp --title='SEO network fixture'
+          wp eval-file "$PWD/tests/multisite.php" --path=/tmp/inkseo-wp
+      - name: Check directory requirements
+        if: matrix.wordpress == 'latest'
+        run: |
+          wp plugin install plugin-check --activate --path=/tmp/inkseo-wp
+          wp plugin check inklura-seo --path=/tmp/inkseo-wp --error-severity=1
+      - uses: actions/upload-artifact@v4
+        if: matrix.wordpress == 'latest'
+        with:
+          name: inklura-seo-wordpress-org
+          path: dist/wordpress-org/inklura-seo.zip*

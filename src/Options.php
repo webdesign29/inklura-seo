@@ -203,15 +203,25 @@ class Options {
 		$text = preg_replace( '/\s+/', ' ', $text );
 		$text = trim( $text );
 
-		if ( $max <= 0 || mb_strlen( $text ) <= $max ) {
+		if ( $max <= 0 ) {
 			return $text;
 		}
 
-		$cut = mb_substr( $text, 0, $max );
+		// WordPress does not require mbstring. Split only the prefix we need,
+		// retaining the remaining text in the last element rather than allocating
+		// one array entry for every character in a potentially large post.
+		$chars = preg_split( '//u', $text, $max + 1, PREG_SPLIT_NO_EMPTY );
+		if ( false === $chars ) {
+			return ''; // Invalid UTF-8 cannot form a useful metadata value.
+		}
+		if ( count( $chars ) <= $max ) {
+			return $text;
+		}
+		$cut = implode( '', array_slice( $chars, 0, $max - 1 ) );
 		// Back up to the last space so we don't cut a word in half.
-		$last_space = mb_strrpos( $cut, ' ' );
+		$last_space = strrpos( $cut, ' ' );
 		if ( false !== $last_space && $last_space > 0 ) {
-			$cut = mb_substr( $cut, 0, $last_space );
+			$cut = substr( $cut, 0, $last_space );
 		}
 		return rtrim( $cut ) . '…';
 	}

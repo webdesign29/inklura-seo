@@ -4,7 +4,7 @@ Tags: seo, sitemap, meta description, open graph, structured data
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.2.1
+Stable tag: 0.2.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,14 @@ Yes. Settings are scoped to each site. Network administrators can configure defa
 Deactivation retains settings and metadata. Deleting the plugin through WordPress removes its own settings and metadata, including network defaults on multisite. Back up any metadata you want to retain before deleting it.
 
 == Changelog ==
+
+= 0.2.2 =
+* Fix duplicate canonical tags, paginated/archive URLs and posts-page metadata.
+* Respect noindex and password protection in sitemap content and metadata.
+* Query sitemap pages independently with no 5,000-post truncation; avoid per-archive date queries.
+* Support UTF-8 descriptions without the PHP mbstring extension.
+* Preserve WordPress title escaping, validate settings input and keep social/schema modules independent.
+* Keep the breadcrumb template helper available when its module is disabled.
 
 = 0.2.1 =
 * Prepare the WordPress.org edition with native directory updates and no external updater.

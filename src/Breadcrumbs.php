@@ -66,8 +66,13 @@ class Breadcrumbs {
 			'url'  => (string) home_url( '/' ),
 		);
 
-		if ( is_front_page() || is_home() ) {
+		if ( is_front_page() ) {
 			// Home only — the single crumb above is enough.
+			return self::finalize( $crumbs );
+		}
+		if ( is_home() && get_option( 'page_for_posts' ) ) {
+			$id       = (int) get_option( 'page_for_posts' );
+			$crumbs[] = array( 'name' => (string) get_the_title( $id ), 'url' => (string) get_permalink( $id ) );
 			return self::finalize( $crumbs );
 		}
 

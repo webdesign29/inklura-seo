@@ -3,6 +3,17 @@
 All notable changes to **Inklura SEO** are documented here. This project adheres
 to [Semantic Versioning](https://semver.org/).
 
+## 0.2.2
+
+- Fix duplicate core/plugin canonical tags and self-canonicals for paginated posts, blog indexes and archives.
+- Escape custom document titles through WordPress's normal title filters; protect password-gated content from metadata disclosure.
+- Replace whole-site sitemap collection with database pagination and count queries. Include all eligible content beyond 5,000 posts; exclude noindex, drafts, protected posts and noindex author archives.
+- Omit unknown archive modification dates instead of running one lastmod query per archive. Post lastmod remains accurate.
+- Return 404 for invalid, disabled and nonpublic sitemap requests; support plain and pretty permalink URLs and avoid overlapping core sitemaps.
+- Remove the mbstring dependency for UTF-8 descriptions, handle malformed settings and preserve literal backslashes.
+- Keep Open Graph/schema descriptions independent of the title module, honor the configured schema publisher, and keep the breadcrumb helper callable when disabled.
+- Add native WordPress integration, security and large-site regression coverage, plus PHP 7.4–8.5 compatibility checks.
+
 ## [0.2.0] - 2026-06-13
 
 A big SEO-coverage release: breadcrumbs, richer schema, a real sitemap index,

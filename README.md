@@ -8,6 +8,10 @@
 > Lightweight, dependency-free SEO for WordPress — titles, social cards, a
 > sitemap and structured data, without the bloat.
 
+Created and maintained by **Benjamin Favre**. Discover
+[Inklura](https://www.inklura.fr/) and the
+[Inklura plugin catalogue](https://plugins.inklura.fr/).
+
 `inklura-seo` is a small WordPress plugin (usable as a normal plugin or a
 **must-use** plugin) that handles the SEO essentials and gets out of the way. No
 upsells, no telemetry, no megabytes of dependencies — just the `<head>` tags,
@@ -141,7 +145,7 @@ must still be coordinated with any other SEO plugins active on the same site.
 inklura-seo is built and maintained with the support of:
 
 - **[webdesign29](https://webdesign29.net)** — web agency (Brest, France).
-- **[Inklura](https://inklura.fr)** — WordPress-compatible CMS & hosting.
+- **[Inklura](https://www.inklura.fr/)** — WordPress-compatible CMS & hosting.
 
 Interested in sponsoring? Use the **Sponsor** button or open an issue.
 

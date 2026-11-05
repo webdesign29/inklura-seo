@@ -23,6 +23,7 @@ rsync -a \
 	--exclude 'tests' \
 	--exclude 'bin' \
 	--exclude 'docs' \
+	--exclude 'dist' \
 	--exclude 'node_modules' \
 	--exclude 'vendor' \
 	--exclude 'composer.json' \

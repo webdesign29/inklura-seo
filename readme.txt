@@ -1,5 +1,5 @@
 === Inklura SEO ===
-Contributors: gr0b1
+Contributors: Benjamin Favre
 Tags: seo, sitemap, meta description, open graph, structured data
 Requires at least: 5.8
 Tested up to: 7.1
@@ -31,7 +31,11 @@ The plugin does not collect analytics, send telemetry or contact an external API
 
 = Source and support =
 
-The source is available at https://github.com/webdesign29/inklura-seo. You can report reproducible issues there. Inklura is published by Webdesign29 in Brest, France.
+Created and maintained by Benjamin Favre, in Brest, France.
+
+* [Inklura](https://www.inklura.fr/) — the Inklura platform.
+* [Inklura plugin catalogue](https://plugins.inklura.fr/) — extensions and documentation.
+* [Source and support](https://github.com/webdesign29/inklura-seo) — source code and reproducible issue reports.
 
 == Installation ==
 
@@ -64,6 +68,7 @@ Deactivation retains settings and metadata. Deleting the plugin through WordPres
 == Changelog ==
 
 = 0.2.2 =
+* Credit Benjamin Favre and add links to Inklura and the plugin catalogue.
 * Fix duplicate canonical tags, paginated/archive URLs and posts-page metadata.
 * Respect noindex and password protection in sitemap content and metadata.
 * Query sitemap pages independently with no 5,000-post truncation; avoid per-archive date queries.

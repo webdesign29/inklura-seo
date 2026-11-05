@@ -164,7 +164,7 @@ class Updater {
 			'name'          => (string) ( isset( $m['name'] ) ? $m['name'] : 'Inklura SEO' ),
 			'slug'          => self::SLUG,
 			'version'       => (string) $m['version'],
-			'author'        => (string) ( isset( $m['author'] ) ? $m['author'] : 'webdesign29' ),
+			'author'        => (string) ( isset( $m['author'] ) ? $m['author'] : 'Benjamin Favre' ),
 			'homepage'      => (string) ( isset( $m['homepage'] ) ? $m['homepage'] : '' ),
 			'requires'      => (string) ( isset( $m['requires'] ) ? $m['requires'] : '' ),
 			'tested'        => (string) ( isset( $m['tested'] ) ? $m['tested'] : '' ),

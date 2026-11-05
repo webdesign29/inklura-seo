@@ -6,8 +6,8 @@
  * Version:           0.2.2
  * Requires at least: 5.8
  * Requires PHP:      7.4
- * Author:            webdesign29
- * Author URI:        https://webdesign29.net
+ * Author:            Benjamin Favre
+ * Author URI:        https://www.inklura.fr/
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       inklura-seo

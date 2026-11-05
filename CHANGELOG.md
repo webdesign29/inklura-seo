@@ -5,6 +5,7 @@ to [Semantic Versioning](https://semver.org/).
 
 ## 0.2.2
 
+- Credit Benjamin Favre and link the Inklura platform and plugin catalogue.
 - Fix duplicate core/plugin canonical tags and self-canonicals for paginated posts, blog indexes and archives.
 - Escape custom document titles through WordPress's normal title filters; protect password-gated content from metadata disclosure.
 - Replace whole-site sitemap collection with database pagination and count queries. Include all eligible content beyond 5,000 posts; exclude noindex, drafts, protected posts and noindex author archives.

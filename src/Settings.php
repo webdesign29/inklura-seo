@@ -267,6 +267,9 @@ class Settings {
 
 		$sitemap_url = Sitemap::index_url();
 		echo '<p class="description">' . esc_html__( 'Sitemap:', 'inklura-seo' ) . ' <a href="' . esc_url( $sitemap_url ) . '" target="_blank" rel="noreferrer">' . esc_html( $sitemap_url ) . '</a></p>';
+		echo '<p class="description">' . esc_html__( 'Created by Benjamin Favre.', 'inklura-seo' )
+			. ' <a href="' . esc_url( 'https://www.inklura.fr/' ) . '">Inklura</a> &middot; '
+			. '<a href="' . esc_url( 'https://plugins.inklura.fr/' ) . '">' . esc_html__( 'Plugin catalogue', 'inklura-seo' ) . '</a></p>';
 
 		echo '</div>';
 	}

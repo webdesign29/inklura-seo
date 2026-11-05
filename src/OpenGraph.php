@@ -92,6 +92,10 @@ class OpenGraph {
 		$url       = (string) home_url( '/' );
 
 		$default_image = (string) $this->options->get( 'default_og_image', '' );
+		// Resolve metadata even when the document-title output module is disabled.
+		$frontend = new Frontend( $this->options, $this->plugin );
+		$desc     = $frontend->description();
+		$url      = $frontend->canonical_url();
 		$post_override = '';
 		$featured      = '';
 		$image_w       = 0;
@@ -106,16 +110,6 @@ class OpenGraph {
 				$title        = ( is_string( $custom_title ) && '' !== trim( $custom_title ) )
 					? trim( $custom_title )
 					: (string) get_the_title( $id );
-
-				$frontend = $this->plugin->module( 'frontend' );
-				if ( $frontend instanceof Frontend ) {
-					$desc = $frontend->description();
-				}
-
-				$perma = get_permalink( $id );
-				if ( $perma ) {
-					$url = (string) $perma;
-				}
 
 				// Per-post OG override.
 				$ov = get_post_meta( $id, MetaBox::META_OG_IMAGE, true );
@@ -138,8 +132,7 @@ class OpenGraph {
 				}
 			}
 		} else {
-			$title = $site_name;
-			$desc  = Options::summarize( (string) get_bloginfo( 'description' ), 160 );
+			$title = $frontend->pre_document_title( '' );
 		}
 
 		if ( '' === $title ) {

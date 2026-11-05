@@ -8,6 +8,10 @@
 > Lightweight, dependency-free SEO for WordPress — titles, social cards, a
 > sitemap and structured data, without the bloat.
 
+Created and maintained by **Benjamin Favre**. Discover
+[Inklura](https://www.inklura.fr/) and the
+[Inklura plugin catalogue](https://plugins.inklura.fr/).
+
 `inklura-seo` is a small WordPress plugin (usable as a normal plugin or a
 **must-use** plugin) that handles the SEO essentials and gets out of the way. No
 upsells, no telemetry, no megabytes of dependencies — just the `<head>` tags,
@@ -22,7 +26,7 @@ network-wide defaults.
 |---|---|
 | **Titles & meta** | Controls the document `<title>` via a configurable format (`%title% %sep% %sitename%`, with `%tagline%` and `%page%`), plus `meta description`, `rel=canonical`, and a `noindex` robots directive. Falls back to the site name/tagline and the excerpt/content. `%page%` adds a "Page N" suffix on paginated views. |
 | **Open Graph / Twitter** | `og:title/description/type/url/image` with `og:image:width`/`height`, a `twitter:card` set, and an optional `twitter:site` handle. The OG image follows a fallback chain: **per-post override → featured image → site default**. |
-| **XML sitemap** | Serves `/inklura-sitemap.xml`. Above a configurable URL cap it splits into a real **sitemap index** of paginated sub-sitemaps. Covers posts/pages/CPTs, **taxonomy archives** (categories, tags, custom) and **author archives**, with accurate `<lastmod>` and `<image:image>` for featured images. Advertised in `robots.txt`. |
+| **XML sitemap** | Serves `/inklura-sitemap.xml`. Above a configurable URL cap it splits into a real **sitemap index** of paginated sub-sitemaps. Covers posts/pages/CPTs, **taxonomy archives** (categories, tags, custom) and **author archives**, with accurate post `<lastmod>` and `<image:image>` for featured images. Advertised in `robots.txt`. |
 | **JSON-LD schema** | `WebSite` + an **Organization or Person** entity on the home page (configurable name + logo); `Article` on singular posts; `BreadcrumbList` wherever a multi-level trail exists. |
 | **Breadcrumbs** | A `BreadcrumbList` graph node plus an optional visible trail — `[inklura_breadcrumbs]` shortcode and a `\Inklura\SEO\inklura_seo_breadcrumbs()` template tag. |
 | **Indexing controls** | One-click `noindex` for search results, paginated (page 2+) views, author archives and date archives. |
@@ -99,7 +103,7 @@ define( 'INKLURA_SEO_UPDATE_URL', 'https://…/update' ); // override update man
 ## Hooks
 
 ```php
-// Adjust the content sitemap entries (array of { loc, lastmod, images? }).
+// Adjust the current page of content sitemap entries ({ loc, lastmod, images? }).
 add_filter( 'inklura/seo/sitemap_entries', function ( $entries ) { return $entries; } );
 
 // Adjust the sitemap-index spec list (array of { loc, lastmod }).
@@ -118,14 +122,30 @@ add_action( 'inklura/seo/booted', function ( $plugin ) {} );
 for t in tests/unit/*.php; do php "$t"; done   # WP-free unit tests
 ```
 
-CI lints on PHP 7.4/8.1/8.3 and runs the unit tests.
+CI lints and runs unit tests on PHP 7.4/8.1/8.3/8.5. The WordPress.org
+package is also installed in native WordPress fixtures and tested for metadata,
+permissions, indexing and full sitemap coverage above 5,000 posts. Integration
+tests require an isolated database named `inklura_seo_audit`:
+
+```bash
+python3 bin/build-wordpress-org.py
+wp plugin install dist/wordpress-org/inklura-seo.zip --force --activate
+INKLURA_SEO_LARGE_TEST=1 wp eval-file tests/integration.php
+```
+
+The sitemap index uses counts; each content/taxonomy/author request loads only
+its configured page. Optional modification dates are emitted for content, and
+omitted for taxonomy/author archives where no reliable date is available. With
+plain permalinks, the settings page and robots.txt advertise query-string sitemap
+URLs. Posts marked noindex and password-protected content are omitted. Settings
+must still be coordinated with any other SEO plugins active on the same site.
 
 ## Sponsors
 
 inklura-seo is built and maintained with the support of:
 
 - **[webdesign29](https://webdesign29.net)** — web agency (Brest, France).
-- **[Inklura](https://inklura.fr)** — WordPress-compatible CMS & hosting.
+- **[Inklura](https://www.inklura.fr/)** — WordPress-compatible CMS & hosting.
 
 Interested in sponsoring? Use the **Sponsor** button or open an issue.
 

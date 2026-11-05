@@ -60,14 +60,14 @@ function inklura_seo_cleanup_blog( $options, $meta_keys, $term_meta_keys = array
 
 if ( is_multisite() ) {
 	// number => 0 = no limit, so large networks are fully cleaned.
-	$site_ids = get_sites(
+	$inklura_seo_site_ids = get_sites(
 		array(
 			'fields' => 'ids',
 			'number' => 0,
 		)
 	);
-	foreach ( $site_ids as $site_id ) {
-		switch_to_blog( (int) $site_id );
+	foreach ( $inklura_seo_site_ids as $inklura_seo_site_id ) {
+		switch_to_blog( (int) $inklura_seo_site_id );
 		inklura_seo_cleanup_blog( $inklura_seo_options, $inklura_seo_meta_keys, $inklura_seo_term_meta_keys );
 		restore_current_blog();
 	}

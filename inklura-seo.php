@@ -3,11 +3,11 @@
  * Plugin Name:       Inklura SEO
  * Plugin URI:        https://github.com/webdesign29/inklura-seo
  * Description:        Lightweight, dependency-free SEO for WordPress: titles, meta description, canonical, robots, Open Graph + Twitter Cards, an XML sitemap, JSON-LD schema, and a per-post SEO meta box. Multisite-safe.
- * Version:           0.2.0
+ * Version:           0.2.2
  * Requires at least: 5.8
  * Requires PHP:      7.4
- * Author:            webdesign29
- * Author URI:        https://webdesign29.net
+ * Author:            Benjamin Favre
+ * Author URI:        https://www.inklura.fr/
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       inklura-seo
@@ -26,7 +26,7 @@ if ( defined( 'INKLURA_SEO_VERSION' ) ) {
 	return;
 }
 
-define( 'INKLURA_SEO_VERSION', '0.2.0' );
+define( 'INKLURA_SEO_VERSION', '0.2.2' );
 define( 'INKLURA_SEO_FILE', __FILE__ );
 define( 'INKLURA_SEO_DIR', __DIR__ );
 // Must-use installs can't self-update through wp-admin (a fleet deploy handles
@@ -59,6 +59,10 @@ spl_autoload_register(
 	}
 );
 
+// Function template tags cannot be autoloaded. Keep the breadcrumb helper
+// callable even when its output module is disabled in settings.
+require_once INKLURA_SEO_DIR . '/src/Breadcrumbs.php';
+
 // Activation: register the sitemap rewrite rule, then flush so /inklura-sitemap.xml
 // resolves immediately. Deactivation flushes again to clean up.
 if ( function_exists( 'register_activation_hook' ) ) {
@@ -74,6 +78,7 @@ if ( function_exists( 'register_deactivation_hook' ) ) {
 	register_deactivation_hook(
 		__FILE__,
 		static function () {
+			\Inklura\SEO\Sitemap::remove_rewrite();
 			flush_rewrite_rules();
 		}
 	);

@@ -41,7 +41,7 @@ class Schema {
 			'@graph'   => $graph,
 		);
 		echo '<script type="application/ld+json">'
-			. wp_json_encode( $doc )
+			. wp_json_encode( $doc, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT )
 			. '</script>' . "\n";
 	}
 
@@ -53,7 +53,7 @@ class Schema {
 	private function build(): array {
 		$nodes = array();
 
-		if ( is_front_page() || is_home() ) {
+		if ( is_front_page() ) {
 			$nodes[] = array(
 				'@type'       => 'WebSite',
 				'@id'         => trailingslashit( (string) home_url( '/' ) ) . '#website',
@@ -73,8 +73,8 @@ class Schema {
 			if ( $id > 0 ) {
 				$post = get_post( $id );
 				if ( $post ) {
-					$frontend = $this->plugin->module( 'frontend' );
-					$desc     = $frontend instanceof Frontend ? $frontend->description() : '';
+					$frontend = new Frontend( $this->options, $this->plugin );
+					$desc     = $frontend->description();
 
 					$article = array(
 						'@type'            => 'Article',
@@ -88,12 +88,11 @@ class Schema {
 							'@type' => 'Person',
 							'name'  => (string) get_the_author_meta( 'display_name', (int) $post->post_author ),
 						),
-						'publisher'        => array(
-							'@type' => 'Organization',
-							'name'  => (string) get_bloginfo( 'name' ),
-							'url'   => (string) home_url( '/' ),
-						),
 					);
+					$publisher = $this->home_entity();
+					if ( null !== $publisher ) {
+						$article['publisher'] = $publisher;
+					}
 					if ( '' !== $desc ) {
 						$article['description'] = $desc;
 					}

@@ -44,6 +44,9 @@ class Sitemap {
 		add_filter( 'query_vars', array( $this, 'query_vars' ) );
 		add_action( 'template_redirect', array( $this, 'maybe_render' ) );
 		add_filter( 'robots_txt', array( $this, 'robots_txt' ), 10, 2 );
+		if ( $this->options->module_enabled( 'sitemap' ) ) {
+			add_filter( 'wp_sitemaps_enabled', '__return_false' );
+		}
 	}
 
 	/**
@@ -58,7 +61,17 @@ class Sitemap {
 			'top'
 		);
 		// Index: inklura-sitemap.xml
-		add_rewrite_rule( '^' . self::PATH . '$', 'index.php?' . self::QUERY_VAR . '=1', 'top' );
+		add_rewrite_rule( '^inklura-sitemap\\.xml$', 'index.php?' . self::QUERY_VAR . '=1', 'top' );
+	}
+
+	/** Remove our in-memory rules before WordPress flushes on deactivation. */
+	public static function remove_rewrite(): void {
+		global $wp_rewrite;
+		foreach ( array_keys( $wp_rewrite->extra_rules_top ) as $rule ) {
+			if ( 0 === strpos( $rule, '^inklura-sitemap' ) ) {
+				unset( $wp_rewrite->extra_rules_top[ $rule ] );
+			}
+		}
 	}
 
 	/**
@@ -79,19 +92,32 @@ class Sitemap {
 			return;
 		}
 		// Self-gate: if disabled after the rewrite was registered, 404 cleanly.
-		if ( ! $this->options->module_enabled( 'sitemap' ) ) {
+		if ( ! $this->options->module_enabled( 'sitemap' ) || ! get_option( 'blog_public' ) ) {
+			$this->not_found();
 			return;
 		}
 
-		$type = (string) get_query_var( self::VAR_TYPE );
-		$page = (int) get_query_var( self::VAR_PAGE );
+		$type = get_query_var( self::VAR_TYPE );
+		$page = get_query_var( self::VAR_PAGE );
+		if ( ! is_scalar( $type ) || ! is_scalar( $page ) ) {
+			$this->not_found();
+			return;
+		}
+		$type = (string) $type;
+		$page = (int) $page;
 
 		if ( '' === $type ) {
 			$xml = $this->build_index();
 		} else {
-			$xml = $this->build_subsitemap( $type, $page > 0 ? $page : 1 );
+			$xml = $this->build_subsitemap( $type, $page );
 		}
 
+		if ( null === $xml ) {
+			$this->not_found();
+			return;
+		}
+
+		status_header( 200 );
 		if ( ! headers_sent() ) {
 			header( 'Content-Type: application/xml; charset=UTF-8' );
 			header( 'X-Robots-Tag: noindex, follow', true );
@@ -100,302 +126,207 @@ class Sitemap {
 		exit;
 	}
 
+	private function not_found(): void {
+		global $wp_query;
+		$wp_query->set_404();
+		status_header( 404 );
+		nocache_headers();
+	}
+
 	// -----------------------------------------------------------------
 	// Index
 	// -----------------------------------------------------------------
 
-	/** Build the sitemap index, listing every populated sub-sitemap page. */
+	/** Build the index from counts; never load every published post here. */
 	private function build_index(): string {
-		$per   = $this->per_page();
-		$home  = (string) home_url( '/' );
 		$specs = array();
-
-		// content (posts + pages + public CPTs).
-		$content = $this->collect_content_entries();
-		$this->add_index_specs( $specs, 'content', $content, $per, $home );
-
-		// taxonomy archives.
+		$this->add_index_specs( $specs, 'content', $this->content_count() );
 		if ( $this->options->get( 'sitemap_taxonomies', 1 ) ) {
 			foreach ( $this->public_taxonomies() as $taxonomy ) {
-				$terms = $this->collect_term_entries( $taxonomy );
-				$this->add_index_specs( $specs, 'tax-' . $taxonomy, $terms, $per, $home );
+				$count = get_terms( array( 'taxonomy' => $taxonomy, 'hide_empty' => true, 'fields' => 'count' ) );
+				$this->add_index_specs( $specs, 'tax-' . $taxonomy, is_wp_error( $count ) ? 0 : (int) $count );
 			}
 		}
-
-		// author archives.
-		if ( $this->options->get( 'sitemap_authors', 1 ) ) {
-			$authors = $this->collect_author_entries();
-			$this->add_index_specs( $specs, 'author', $authors, $per, $home );
+		if ( $this->authors_enabled() ) {
+			$query = new \WP_User_Query( $this->author_args( 1, true ) );
+			$this->add_index_specs( $specs, 'author', (int) $query->get_total() );
 		}
-
-		/**
-		 * Filter the sub-sitemap specs before the index is rendered.
-		 *
-		 * @param array $specs Each: array{ loc:string, lastmod:string }.
-		 */
 		$specs = apply_filters( 'inklura/seo/sitemap_index', $specs );
-
 		return self::build_index_xml( is_array( $specs ) ? $specs : array() );
 	}
 
-	/**
-	 * Append one index <sitemap> spec per page of the given entry set.
-	 *
-	 * @param array<int,array{loc:string,lastmod:string}> $specs   Accumulator (by ref).
-	 * @param string                                       $type    Sub-sitemap type token.
-	 * @param array<int,array<string,mixed>>               $entries Entries for this type.
-	 * @param int                                          $per     Max URLs per page.
-	 * @param string                                       $home    Home URL.
-	 */
-	private function add_index_specs( array &$specs, string $type, array $entries, int $per, string $home ): void {
-		if ( empty( $entries ) ) {
-			return;
-		}
-		$pages = Options::chunk_entries( $entries, $per );
-		foreach ( $pages as $i => $chunk ) {
-			$page    = $i + 1;
-			$specs[] = array(
-				'loc'     => self::subsitemap_url( $home, $type, $page ),
-				'lastmod' => self::latest_lastmod( $chunk ),
-			);
+	/** Append one index entry per page without materializing its URL list. */
+	private function add_index_specs( array &$specs, string $type, int $count ): void {
+		$pages = (int) ceil( $count / $this->per_page() );
+		for ( $page = 1; $page <= $pages; ++$page ) {
+			$specs[] = array( 'loc' => self::page_url( $type, $page ) );
 		}
 	}
 
-	// -----------------------------------------------------------------
-	// Sub-sitemaps
-	// -----------------------------------------------------------------
-
-	/**
-	 * Build a single sub-sitemap page of URLs for the given type.
-	 *
-	 * @param string $type content | tax-<taxonomy> | author
-	 * @param int    $page 1-based page number.
-	 * @return string
-	 */
-	private function build_subsitemap( string $type, int $page ): string {
+	/** Build just the requested page. Unknown and empty pages are 404s. */
+	private function build_subsitemap( string $type, int $page ): ?string {
+		if ( $page < 1 ) {
+			return null;
+		}
 		$entries = array();
-
 		if ( 'content' === $type ) {
-			$entries = $this->collect_content_entries();
+			$entries = $this->collect_content_entries( $page );
 		} elseif ( 0 === strpos( $type, 'tax-' ) ) {
 			$taxonomy = substr( $type, 4 );
 			if ( $this->options->get( 'sitemap_taxonomies', 1 ) && in_array( $taxonomy, $this->public_taxonomies(), true ) ) {
-				$entries = $this->collect_term_entries( $taxonomy );
+				$entries = $this->collect_term_entries( $taxonomy, $page );
 			}
-		} elseif ( 'author' === $type ) {
-			if ( $this->options->get( 'sitemap_authors', 1 ) ) {
-				$entries = $this->collect_author_entries();
-			}
+		} elseif ( 'author' === $type && $this->authors_enabled() ) {
+			$entries = $this->collect_author_entries( $page );
 		}
-
-		$pages = Options::chunk_entries( $entries, $this->per_page() );
-		$idx   = $page - 1;
-		$slice = isset( $pages[ $idx ] ) ? $pages[ $idx ] : array();
-
-		return self::build_xml( $slice );
+		return empty( $entries ) ? null : self::build_xml( $entries );
 	}
 
-	// -----------------------------------------------------------------
-	// Entry collection
-	// -----------------------------------------------------------------
-
-	/**
-	 * Gather published posts, pages and public CPTs as entry rows, including the
-	 * home page and (when enabled) an <image:image> for the featured image.
-	 *
-	 * @return array<int,array<string,mixed>>
-	 */
-	private function collect_content_entries(): array {
-		$entries = array();
-
-		// Home page first.
-		$entries[] = array(
-			'loc'     => (string) home_url( '/' ),
-			'lastmod' => '',
+	/** Shared eligibility for count and page queries: public, indexable content. */
+	private function content_args(): array {
+		$front = 'page' === get_option( 'show_on_front' ) ? (int) get_option( 'page_on_front' ) : 0;
+		return array(
+			'post_type'              => $this->public_post_types(),
+			'post_status'            => 'publish',
+			'has_password'           => false,
+			'ignore_sticky_posts'    => true,
+			'orderby'                => 'ID',
+			'order'                  => 'ASC',
+			'no_found_rows'          => true,
+			'post__not_in'           => $front ? array( $front ) : array(),
+			'meta_query'             => array(
+				'relation' => 'OR',
+				array( 'key' => MetaBox::META_NOINDEX, 'compare' => 'NOT EXISTS' ),
+				array( 'key' => MetaBox::META_NOINDEX, 'value' => '1', 'compare' => '!=' ),
+			),
 		);
+	}
 
-		$with_images = (bool) $this->options->get( 'sitemap_images', 1 );
-
-		$posts = get_posts(
-			array(
-				'post_type'      => $this->public_post_types(),
-				'post_status'    => 'publish',
-				'posts_per_page' => 5000,
-				'orderby'        => 'modified',
-				'order'          => 'DESC',
-				'no_found_rows'  => true,
-				'has_password'   => false,
-			)
-		);
-
-		foreach ( $posts as $post ) {
-			$link = get_permalink( $post );
-			if ( ! $link ) {
-				continue;
+	/** Home is included once, provided the static front page is indexable. */
+	private function home_entry(): ?array {
+		$modified = '';
+		if ( 'page' === get_option( 'show_on_front' ) ) {
+			$id   = (int) get_option( 'page_on_front' );
+			$post = get_post( $id );
+			if ( ! $id || ! $post || 'publish' !== $post->post_status || '' !== $post->post_password
+				|| '1' === (string) get_post_meta( $id, MetaBox::META_NOINDEX, true ) ) {
+				return null;
 			}
-			$row = array(
-				'loc'     => (string) $link,
-				'lastmod' => (string) get_post_modified_time( 'c', true, $post ),
-			);
-			if ( $with_images && has_post_thumbnail( $post ) ) {
-				$img = get_the_post_thumbnail_url( $post, 'full' );
-				if ( $img ) {
-					$row['images'] = array( (string) $img );
-				}
-			}
-			$entries[] = $row;
+			$modified = (string) get_post_modified_time( 'c', true, $post );
 		}
+		return array( 'loc' => (string) home_url( '/' ), 'lastmod' => $modified );
+	}
 
-		/**
-		 * Filter the content sitemap entries before rendering.
-		 *
-		 * @param array $entries Each: array{ loc, lastmod, images? }.
-		 */
+	private function content_count(): int {
+		$args                   = $this->content_args();
+		$args['posts_per_page']  = 1;
+		$args['fields']          = 'ids';
+		$args['no_found_rows']   = false;
+		$query                  = new \WP_Query( $args );
+		return (int) $query->found_posts + ( null !== $this->home_entry() ? 1 : 0 );
+	}
+
+	/** Query at most one page, with stable ordering and no arbitrary 5,000 cap. */
+	private function collect_content_entries( int $page ): array {
+		$home    = $this->home_entry();
+		$per     = $this->per_page();
+		$entries = 1 === $page && null !== $home ? array( $home ) : array();
+		$limit   = $per - count( $entries );
+		if ( $limit > 0 ) {
+			$args                   = $this->content_args();
+			$args['posts_per_page']  = $limit;
+			$args['offset']          = max( 0, ( $page - 1 ) * $per - ( null !== $home ? 1 : 0 ) );
+			$query                  = new \WP_Query( $args );
+			$with_images            = (bool) $this->options->get( 'sitemap_images', 1 );
+			foreach ( $query->posts as $post ) {
+				$link = get_permalink( $post );
+				if ( ! $link ) {
+					continue;
+				}
+				$row = array( 'loc' => (string) $link, 'lastmod' => (string) get_post_modified_time( 'c', true, $post ) );
+				if ( $with_images ) {
+					$img = get_the_post_thumbnail_url( $post, 'full' );
+					if ( $img ) {
+						$row['images'] = array( (string) $img );
+					}
+				}
+				$entries[] = $row;
+			}
+		}
+		// The filter receives only the current page's content entries.
 		$entries = apply_filters( 'inklura/seo/sitemap_entries', $entries );
-
 		return is_array( $entries ) ? $entries : array();
 	}
 
-	/**
-	 * Gather term-archive entries for one taxonomy.
-	 *
-	 * @param string $taxonomy
-	 * @return array<int,array<string,mixed>>
-	 */
-	private function collect_term_entries( string $taxonomy ): array {
+	/** Paginated taxonomy URLs; optional lastmod is omitted when unknown. */
+	private function collect_term_entries( string $taxonomy, int $page ): array {
 		$entries = array();
-		$terms   = get_terms(
-			array(
-				'taxonomy'   => $taxonomy,
-				'hide_empty' => true,
-				'number'     => 5000,
-			)
-		);
+		$terms   = get_terms( array(
+			'taxonomy' => $taxonomy, 'hide_empty' => true,
+			'number' => $this->per_page(), 'offset' => ( $page - 1 ) * $this->per_page(),
+			'orderby' => 'term_id', 'order' => 'ASC',
+		) );
 		if ( is_wp_error( $terms ) || ! is_array( $terms ) ) {
 			return $entries;
 		}
 		foreach ( $terms as $term ) {
 			$link = get_term_link( $term );
-			if ( ! $link || is_wp_error( $link ) ) {
-				continue;
+			if ( $link && ! is_wp_error( $link ) ) {
+				$entries[] = array( 'loc' => (string) $link );
 			}
-			$entries[] = array(
-				'loc'     => (string) $link,
-				'lastmod' => $this->term_lastmod( $term ),
-			);
 		}
 		return $entries;
 	}
 
-	/**
-	 * Gather author-archive entries for authors who have published content.
-	 *
-	 * @return array<int,array<string,mixed>>
-	 */
-	private function collect_author_entries(): array {
+	private function authors_enabled(): bool {
+		return (bool) $this->options->get( 'sitemap_authors', 1 ) && ! $this->options->get( 'noindex_author', 0 );
+	}
+
+	private function author_args( int $page, bool $count = false ): array {
+		return array(
+			'has_published_posts' => $this->public_post_types(), 'fields' => 'ID',
+			'number' => $count ? 1 : $this->per_page(),
+			'offset' => $count ? 0 : ( $page - 1 ) * $this->per_page(),
+			'orderby' => 'ID', 'order' => 'ASC', 'count_total' => $count,
+		);
+	}
+
+	/** One bounded author query, with no per-author lastmod queries. */
+	private function collect_author_entries( int $page ): array {
+		$query   = new \WP_User_Query( $this->author_args( $page ) );
 		$entries = array();
-		if ( ! function_exists( 'get_users' ) ) {
-			return $entries;
-		}
-		$users = get_users(
-			array(
-				'has_published_posts' => true,
-				'fields'              => array( 'ID' ),
-			)
-		);
-		foreach ( $users as $user ) {
-			$uid  = (int) ( isset( $user->ID ) ? $user->ID : $user );
-			$link = get_author_posts_url( $uid );
-			if ( ! $link ) {
-				continue;
+		$ids     = $query->get_results();
+		cache_users( array_map( 'intval', $ids ) );
+		foreach ( $ids as $id ) {
+			$link = get_author_posts_url( (int) $id );
+			if ( $link ) {
+				$entries[] = array( 'loc' => (string) $link );
 			}
-			$entries[] = array(
-				'loc'     => (string) $link,
-				'lastmod' => $this->author_lastmod( $uid ),
-			);
 		}
 		return $entries;
 	}
 
-	/**
-	 * Most-recent modified date among a term's published posts (accurate lastmod).
-	 *
-	 * @param object $term WP_Term.
-	 * @return string ISO-8601 date or ''.
-	 */
-	private function term_lastmod( $term ): string {
-		if ( ! isset( $term->term_id, $term->taxonomy ) ) {
-			return '';
-		}
-		$posts = get_posts(
-			array(
-				'post_type'      => 'any',
-				'post_status'    => 'publish',
-				'posts_per_page' => 1,
-				'orderby'        => 'modified',
-				'order'          => 'DESC',
-				'no_found_rows'  => true,
-				'fields'         => 'ids',
-				'tax_query'      => array(
-					array(
-						'taxonomy' => (string) $term->taxonomy,
-						'field'    => 'term_id',
-						'terms'    => (int) $term->term_id,
-					),
-				),
-			)
-		);
-		if ( empty( $posts ) ) {
-			return '';
-		}
-		return (string) get_post_modified_time( 'c', true, (int) $posts[0] );
-	}
-
-	/**
-	 * Most-recent modified date among an author's published posts.
-	 *
-	 * @param int $author_id
-	 * @return string ISO-8601 date or ''.
-	 */
-	private function author_lastmod( int $author_id ): string {
-		$posts = get_posts(
-			array(
-				'author'         => $author_id,
-				'post_type'      => 'any',
-				'post_status'    => 'publish',
-				'posts_per_page' => 1,
-				'orderby'        => 'modified',
-				'order'          => 'DESC',
-				'no_found_rows'  => true,
-				'fields'         => 'ids',
-			)
-		);
-		if ( empty( $posts ) ) {
-			return '';
-		}
-		return (string) get_post_modified_time( 'c', true, (int) $posts[0] );
-	}
-
-	/** Public, sitemap-eligible post types. */
 	private function public_post_types(): array {
-		$types = get_post_types(
-			array(
-				'public'              => true,
-				'exclude_from_search' => false,
-			),
-			'names'
-		);
+		$types = get_post_types( array( 'public' => true ), 'objects' );
 		unset( $types['attachment'] );
-		$types = array_values( $types );
-		return ! empty( $types ) ? $types : array( 'post', 'page' );
+		return array_keys( array_filter( $types, 'is_post_type_viewable' ) );
 	}
 
-	/** Public taxonomies eligible for the sitemap. */
 	private function public_taxonomies(): array {
-		$taxes = get_taxonomies( array( 'public' => true ), 'names' );
-		// Post format is noise in a sitemap.
+		$taxes = get_taxonomies( array( 'public' => true, 'publicly_queryable' => true ), 'names' );
 		unset( $taxes['post_format'] );
 		return array_values( $taxes );
+	}
+
+	/** Directory links work with both pretty and plain WordPress permalinks. */
+	public static function index_url(): string {
+		return get_option( 'permalink_structure' ) ? self::sitemap_url( (string) home_url( '/' ) )
+			: (string) add_query_arg( self::QUERY_VAR, 1, home_url( '/' ) );
+	}
+
+	private static function page_url( string $type, int $page ): string {
+		return get_option( 'permalink_structure' ) ? self::subsitemap_url( (string) home_url( '/' ), $type, $page )
+			: (string) add_query_arg( array( self::QUERY_VAR => 1, self::VAR_TYPE => $type, self::VAR_PAGE => $page ), home_url( '/' ) );
 	}
 
 	/** The per-page URL cap, clamped to a sane range. */
@@ -533,8 +464,8 @@ class Sitemap {
 	 * @return string
 	 */
 	public function robots_txt( $output, $public ): string {
-		if ( $this->options->module_enabled( 'sitemap' ) ) {
-			$output .= "\nSitemap: " . self::sitemap_url( (string) home_url( '/' ) ) . "\n";
+		if ( $public && get_option( 'blog_public' ) && $this->options->module_enabled( 'sitemap' ) ) {
+			$output .= "\nSitemap: " . self::index_url() . "\n";
 		}
 		return (string) $output;
 	}

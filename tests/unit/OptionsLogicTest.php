@@ -215,8 +215,10 @@ $check(
 );
 $long      = str_repeat( 'word ', 60 ); // 300 chars
 $truncated = Options::summarize( $long, 50 );
-$check( mb_strlen( $truncated ) <= 51, 'summarize: truncates to <= max (+ellipsis char)' );
-$check( '…' === mb_substr( $truncated, -1 ), 'summarize: appends an ellipsis when cut' );
+$check( preg_match_all( '/./us', $truncated ) <= 50, 'summarize: stays within the character limit including ellipsis' );
+$check( '…' === substr( $truncated, -3 ), 'summarize: appends an ellipsis when cut' );
+$check( 'été…' === Options::summarize( 'étéétéété', 4 ), 'summarize: handles UTF-8 without mbstring' );
+$check( '…' === Options::summarize( 'abc', 1 ), 'summarize: handles a one-character limit' );
 $check( false === strpos( $truncated, 'wor…' ), 'summarize: truncates on a word boundary (no half words)' );
 
 // ---------------------------------------------------------------------

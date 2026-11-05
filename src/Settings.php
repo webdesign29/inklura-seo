@@ -78,7 +78,8 @@ class Settings {
 	 * @return array<string,mixed>
 	 */
 	public function sanitize( $input ): array {
-		$in  = is_array( $input ) ? $input : array();
+		$in  = is_array( $input ) ? array_filter( $input, 'is_scalar' ) : array();
+		// The Settings API already unslashes input before this callback runs.
 		$out = array();
 
 		// Separator: must be a known key.
@@ -87,7 +88,7 @@ class Settings {
 		$out['title_separator'] = in_array( $sep, $sep_keys, true ) ? $sep : '-';
 
 		// Title format: free text, but must contain at least %title% or %sitename%.
-		$format = isset( $in['title_format'] ) ? sanitize_text_field( wp_unslash( $in['title_format'] ) ) : '';
+		$format = isset( $in['title_format'] ) ? sanitize_text_field( $in['title_format'] ) : '';
 		if ( '' === $format || ( false === strpos( $format, '%title%' ) && false === strpos( $format, '%sitename%' ) ) ) {
 			$format = '%title% %sep% %sitename%';
 		}
@@ -95,22 +96,22 @@ class Settings {
 
 		// Default OG image: a URL.
 		$out['default_og_image'] = isset( $in['default_og_image'] )
-			? esc_url_raw( trim( (string) wp_unslash( $in['default_og_image'] ) ) )
+			? esc_url_raw( trim( (string) $in['default_og_image'] ) )
 			: '';
 
 		// Twitter @site handle, normalized.
 		$out['twitter_site'] = OpenGraph::normalize_handle(
-			isset( $in['twitter_site'] ) ? (string) wp_unslash( $in['twitter_site'] ) : ''
+			isset( $in['twitter_site'] ) ? (string) $in['twitter_site'] : ''
 		);
 
 		// Home-page schema entity.
 		$schema_type             = isset( $in['home_schema_type'] ) ? (string) $in['home_schema_type'] : 'organization';
 		$out['home_schema_type'] = in_array( $schema_type, array( 'organization', 'person', 'none' ), true ) ? $schema_type : 'organization';
-		$out['home_schema_name'] = isset( $in['home_schema_name'] ) ? sanitize_text_field( wp_unslash( $in['home_schema_name'] ) ) : '';
-		$out['home_schema_logo'] = isset( $in['home_schema_logo'] ) ? esc_url_raw( trim( (string) wp_unslash( $in['home_schema_logo'] ) ) ) : '';
+		$out['home_schema_name'] = isset( $in['home_schema_name'] ) ? sanitize_text_field( $in['home_schema_name'] ) : '';
+		$out['home_schema_logo'] = isset( $in['home_schema_logo'] ) ? esc_url_raw( trim( (string) $in['home_schema_logo'] ) ) : '';
 
 		// Breadcrumbs.
-		$home_label                  = isset( $in['breadcrumb_home_label'] ) ? sanitize_text_field( wp_unslash( $in['breadcrumb_home_label'] ) ) : '';
+		$home_label                  = isset( $in['breadcrumb_home_label'] ) ? sanitize_text_field( $in['breadcrumb_home_label'] ) : '';
 		$out['breadcrumb_home_label'] = '' !== $home_label ? $home_label : 'Home';
 
 		// Sitemap tuning.
@@ -264,8 +265,11 @@ class Settings {
 		submit_button( __( 'Save settings', 'inklura-seo' ) );
 		echo '</form>';
 
-		$sitemap_url = Sitemap::sitemap_url( (string) home_url( '/' ) );
+		$sitemap_url = Sitemap::index_url();
 		echo '<p class="description">' . esc_html__( 'Sitemap:', 'inklura-seo' ) . ' <a href="' . esc_url( $sitemap_url ) . '" target="_blank" rel="noreferrer">' . esc_html( $sitemap_url ) . '</a></p>';
+		echo '<p class="description">' . esc_html__( 'Created by Benjamin Favre.', 'inklura-seo' )
+			. ' <a href="' . esc_url( 'https://www.inklura.fr/' ) . '">Inklura</a> &middot; '
+			. '<a href="' . esc_url( 'https://plugins.inklura.fr/' ) . '">' . esc_html__( 'Plugin catalogue', 'inklura-seo' ) . '</a></p>';
 
 		echo '</div>';
 	}

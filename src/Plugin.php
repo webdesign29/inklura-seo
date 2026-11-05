@@ -94,9 +94,7 @@ final class Plugin {
 		// The sitemap needs its rewrite rule + query var registered on every
 		// request (front and admin) so the URL keeps resolving; it self-gates
 		// inside render() when the module is disabled.
-		if ( $this->options->module_enabled( 'sitemap' ) ) {
-			$this->boot_module( 'sitemap', Sitemap::class );
-		}
+		$this->boot_module( 'sitemap', Sitemap::class );
 
 		// The per-post meta box + per-term SEO fields (admin-only, but their save
 		// hooks fire on save_post / created_*term* during normal requests).

@@ -142,8 +142,8 @@ class MetaBox {
 		$this->save_or_delete( $post_id, self::META_DESC, $desc );
 
 		// OG image override (a URL).
-		$og_image = isset( $_POST['inklura_seo_og_image'] )
-			? esc_url_raw( trim( (string) wp_unslash( $_POST['inklura_seo_og_image'] ) ) )
+		$og_image = isset( $_POST['inklura_seo_og_image'] ) && is_string( $_POST['inklura_seo_og_image'] )
+			? esc_url_raw( wp_unslash( $_POST['inklura_seo_og_image'] ) )
 			: '';
 		$this->save_or_delete( $post_id, self::META_OG_IMAGE, $og_image );
 

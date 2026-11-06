@@ -83,7 +83,7 @@ class Network {
 		$out['home_schema_logo'] = isset( $in['home_schema_logo'] ) ? esc_url_raw( trim( (string) $in['home_schema_logo'] ) ) : '';
 
 		$home_label                   = isset( $in['breadcrumb_home_label'] ) ? sanitize_text_field( $in['breadcrumb_home_label'] ) : '';
-		$out['breadcrumb_home_label'] = '' !== $home_label ? $home_label : 'Home';
+		$out['breadcrumb_home_label'] = $home_label;
 
 		$max = isset( $in['sitemap_max_urls'] ) ? (int) $in['sitemap_max_urls'] : 1000;
 		if ( $max < 1 ) {
@@ -204,7 +204,7 @@ class Network {
 		// Breadcrumbs.
 		$this->row(
 			__( 'Home crumb label', 'inklura-seo' ),
-			'<input type="text" name="inklura_seo[breadcrumb_home_label]" class="regular-text" value="' . esc_attr( (string) $g( 'breadcrumb_home_label', 'Home' ) ) . '" />'
+			'<input type="text" name="inklura_seo[breadcrumb_home_label]" class="regular-text" value="' . esc_attr( (string) $g( 'breadcrumb_home_label', '' ) ) . '" placeholder="' . esc_attr__( 'Home', 'inklura-seo' ) . '" />'
 		);
 
 		// Sitemap URLs per page.

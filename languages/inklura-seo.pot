@@ -1,0 +1,408 @@
+# Translation of Plugins - Inklura SEO - Stable (latest release) in French (France)
+# This file is distributed under the same license as the Plugins - Inklura SEO - Stable (latest release) package.
+msgid ""
+msgstr ""
+"Project-Id-Version: Inklura SEO 0.2.3\n"
+"POT-Creation-Date: 2026-11-06 12:00+0100\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/TermMeta.php:104
+msgid "Overrides the document title for this term archive."
+msgstr ""
+
+#: src/TermMeta.php:84 src/TermMeta.php:110
+msgid "Up to ~160 characters. Leave blank to use the term description."
+msgstr ""
+
+#: src/TermMeta.php:78
+msgid ""
+"Overrides the document title for this term archive. Leave blank to use the "
+"title format."
+msgstr ""
+
+#: src/Settings.php:285
+msgid "Network → Inklura SEO"
+msgstr ""
+
+#: src/Settings.php:284
+msgid ""
+"Network defaults are configured; values you leave at their default here "
+"inherit from"
+msgstr ""
+
+#: src/Settings.php:272
+msgid "Plugin catalogue"
+msgstr ""
+
+#: src/Settings.php:270
+msgid "Created by Benjamin Favre."
+msgstr ""
+
+#: src/Settings.php:269
+msgid "Sitemap:"
+msgstr ""
+
+#: src/Settings.php:265
+msgid "Save settings"
+msgstr ""
+
+#: src/Settings.php:262
+msgid ""
+"Output WebSite/Organization (home), Article (posts) and BreadcrumbList data"
+msgstr ""
+
+#: src/Settings.php:261
+msgid "Serve /inklura-sitemap.xml and advertise it in robots.txt"
+msgstr ""
+
+#: src/Settings.php:260
+msgid "Output Open Graph + Twitter Card tags"
+msgstr ""
+
+#: src/Settings.php:259
+msgid "Output document title, meta description, canonical and robots"
+msgstr ""
+
+#: src/Settings.php:257
+msgid "Modules"
+msgstr ""
+
+#: src/Settings.php:254
+msgid "noindex date-based archive pages"
+msgstr ""
+
+#: src/Settings.php:254
+msgid "Date archives"
+msgstr ""
+
+#: src/Settings.php:253
+msgid "noindex author archive pages"
+msgstr ""
+
+#: src/Settings.php:253
+msgid "Author archives"
+msgstr ""
+
+#: src/Settings.php:252
+msgid "noindex page 2+ of archives / paginated content"
+msgstr ""
+
+#: src/Settings.php:252
+msgid "Paginated pages"
+msgstr ""
+
+#: src/Settings.php:251
+msgid "noindex search-result pages"
+msgstr ""
+
+#: src/Settings.php:251
+msgid "Search results"
+msgstr ""
+
+#: src/Settings.php:249
+msgid "Indexing (robots)"
+msgstr ""
+
+#: src/Settings.php:246
+msgid "Add <image:image> for entries with a featured image"
+msgstr ""
+
+#: src/Settings.php:246
+msgid "Include featured images"
+msgstr ""
+
+#: src/Settings.php:245
+msgid "Authors who have published content"
+msgstr ""
+
+#: src/Settings.php:245
+msgid "Include author archives"
+msgstr ""
+
+#: src/Settings.php:244
+msgid "Categories, tags and public custom taxonomies"
+msgstr ""
+
+#: src/Settings.php:244
+msgid "Include taxonomy archives"
+msgstr ""
+
+#: src/Settings.php:242
+msgid ""
+"Above this, the sitemap splits into a real index of paginated sub-sitemaps."
+msgstr ""
+
+#: src/Settings.php:233
+msgid "Sitemap"
+msgstr ""
+
+#: src/Settings.php:226
+msgid ""
+"BreadcrumbList structured data + the [inklura_breadcrumbs] shortcode / "
+"template tag"
+msgstr ""
+
+#: src/Settings.php:226
+msgid "Enable breadcrumbs"
+msgstr ""
+
+#: src/Settings.php:219
+msgid "Logo / image URL"
+msgstr ""
+
+#: src/Settings.php:216
+msgid "Leave blank to use the site name."
+msgstr ""
+
+#: src/Settings.php:214
+msgid "Entity name"
+msgstr ""
+
+#: src/Settings.php:211
+msgid "Emit an Organization or Person node on the home page (or none)."
+msgstr ""
+
+#: src/Settings.php:209
+msgid "Entity type"
+msgstr ""
+
+#: src/Settings.php:206
+msgid "Home page entity (schema)"
+msgstr ""
+
+#: src/Settings.php:202
+msgid "Output as twitter:site. A handle or a profile URL — both are accepted."
+msgstr ""
+
+#: src/Settings.php:197
+msgid ""
+"Fallback share image when a post has no OG override and no featured image."
+msgstr ""
+
+#: src/Settings.php:192
+msgid "Social"
+msgstr ""
+
+#: src/Settings.php:188
+msgid ""
+"%page% is replaced with the page suffix on paginated views (and dropped on "
+"page 1)."
+msgstr ""
+
+#: src/Settings.php:186
+msgid "Tokens:"
+msgstr ""
+
+#: src/Settings.php:176
+msgid "Titles"
+msgstr ""
+
+#: src/Settings.php:57
+msgid "Settings"
+msgstr ""
+
+#: src/Network.php:242
+msgid "Save network defaults"
+msgstr ""
+
+#: src/Network.php:236
+msgid "Enabled by default"
+msgstr ""
+
+#: src/Network.php:228
+msgid "noindex date archives"
+msgstr ""
+
+#: src/Network.php:227
+msgid "noindex author archives"
+msgstr ""
+
+#: src/Network.php:226
+msgid "noindex paginated pages"
+msgstr ""
+
+#: src/Network.php:225
+msgid "noindex search results"
+msgstr ""
+
+#: src/Network.php:224
+msgid "Sitemap: featured images"
+msgstr ""
+
+#: src/Network.php:223
+msgid "Sitemap: author archives"
+msgstr ""
+
+#: src/Network.php:222
+msgid "Sitemap: taxonomy archives"
+msgstr ""
+
+#: src/Network.php:221 src/Settings.php:224
+msgid "Breadcrumbs"
+msgstr ""
+
+#: src/Network.php:220 src/Settings.php:262
+msgid "JSON-LD schema"
+msgstr ""
+
+#: src/Network.php:219 src/Settings.php:261
+msgid "XML sitemap"
+msgstr ""
+
+#: src/Network.php:218 src/Settings.php:260
+msgid "Open Graph / Twitter"
+msgstr ""
+
+#: src/Network.php:217 src/Settings.php:259
+msgid "Titles & meta"
+msgstr ""
+
+#: src/Network.php:212 src/Settings.php:236
+msgid "URLs per sitemap"
+msgstr ""
+
+#: src/Network.php:206 src/Settings.php:228
+msgid "Home crumb label"
+msgstr ""
+
+#: src/Network.php:200
+msgid "Home entity logo / image URL"
+msgstr ""
+
+#: src/Network.php:196
+msgid "Home entity name"
+msgstr ""
+
+#: src/Network.php:194
+msgid "Home entity type"
+msgstr ""
+
+#: src/Network.php:182 src/Settings.php:337
+msgid "None"
+msgstr ""
+
+#: src/Network.php:181 src/Settings.php:336
+msgid "Person"
+msgstr ""
+
+#: src/Network.php:180 src/Settings.php:335
+msgid "Organization"
+msgstr ""
+
+#: src/Network.php:174 src/Settings.php:200
+msgid "Twitter / X @site handle"
+msgstr ""
+
+#: src/Network.php:170 src/Settings.php:195
+msgid "Default OG image URL"
+msgstr ""
+
+#: src/Network.php:166 src/Settings.php:184
+msgid "Title format"
+msgstr ""
+
+#: src/Network.php:163 src/Settings.php:180
+msgid "Title separator"
+msgstr ""
+
+#: src/Network.php:144
+msgid "Network defaults saved."
+msgstr ""
+
+#: src/Network.php:141
+msgid ""
+"These defaults apply to every site that has not overridden the corresponding"
+" setting on its own Inklura SEO page."
+msgstr ""
+
+#: src/Network.php:140
+msgid "Inklura SEO — Network defaults"
+msgstr ""
+
+#: src/Network.php:57
+msgid "Invalid nonce"
+msgstr ""
+
+#: src/Network.php:53
+msgid "Missing nonce"
+msgstr ""
+
+#: src/Network.php:50
+msgid "Forbidden"
+msgstr ""
+
+#: src/MetaBox.php:100
+msgid ""
+"Discourage search engines from indexing this entry (noindex, nofollow)."
+msgstr ""
+
+#: src/MetaBox.php:97
+msgid ""
+"Overrides the share image for this entry. Falls back to the featured image, "
+"then the site default."
+msgstr ""
+
+#: src/MetaBox.php:94
+msgid "Social image (Open Graph) URL"
+msgstr ""
+
+#: src/MetaBox.php:92
+msgid "Up to ~160 characters. Leave blank to derive from the excerpt/content."
+msgstr ""
+
+#: src/MetaBox.php:90 src/TermMeta.php:82 src/TermMeta.php:108
+msgid "Meta description"
+msgstr ""
+
+#: src/MetaBox.php:88
+msgid ""
+"Overrides the <title> for this entry. Leave blank to use the title format."
+msgstr ""
+
+#: src/MetaBox.php:85 src/TermMeta.php:76 src/TermMeta.php:102
+msgid "SEO title"
+msgstr ""
+
+#: src/Frontend.php:191
+msgid "Page not found"
+msgstr ""
+
+#: src/Frontend.php:151
+msgid "Page"
+msgstr ""
+
+#. Author URI of the plugin
+#: inklura-seo.php
+msgid "https://www.inklura.fr/"
+msgstr ""
+
+#. Author of the plugin
+#: inklura-seo.php
+msgid "Benjamin Favre"
+msgstr ""
+
+#. Description of the plugin
+#: inklura-seo.php
+msgid ""
+"Lightweight, dependency-free SEO for WordPress: titles, meta description, "
+"canonical, robots, Open Graph + Twitter Cards, an XML sitemap, JSON-LD "
+"schema, and a per-post SEO meta box. Multisite-safe."
+msgstr ""
+
+#. Plugin URI of the plugin
+#: inklura-seo.php
+msgid "https://github.com/webdesign29/inklura-seo"
+msgstr ""
+
+#. Plugin Name of the plugin
+#: inklura-seo.php src/Settings.php:169
+msgid "Inklura SEO"
+msgstr ""
+
+msgid "Home"
+msgstr ""
+
+msgid "Breadcrumb"
+msgstr ""

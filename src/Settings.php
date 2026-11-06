@@ -112,7 +112,7 @@ class Settings {
 
 		// Breadcrumbs.
 		$home_label                  = isset( $in['breadcrumb_home_label'] ) ? sanitize_text_field( $in['breadcrumb_home_label'] ) : '';
-		$out['breadcrumb_home_label'] = '' !== $home_label ? $home_label : 'Home';
+		$out['breadcrumb_home_label'] = $home_label;
 
 		// Sitemap tuning.
 		$max                     = isset( $in['sitemap_max_urls'] ) ? (int) $in['sitemap_max_urls'] : 1000;
@@ -226,7 +226,7 @@ class Settings {
 		$this->row( __( 'Enable breadcrumbs', 'inklura-seo' ), $this->checkbox( 'enable_breadcrumbs', $g( 'enable_breadcrumbs', 1 ), __( 'BreadcrumbList structured data + the [inklura_breadcrumbs] shortcode / template tag', 'inklura-seo' ) ) );
 		$this->row(
 			__( 'Home crumb label', 'inklura-seo' ),
-			$this->text( 'breadcrumb_home_label', (string) $g( 'breadcrumb_home_label', 'Home' ), 'Home' )
+			$this->text( 'breadcrumb_home_label', (string) $g( 'breadcrumb_home_label', '' ), __( 'Home', 'inklura-seo' ) )
 		);
 		echo '</tbody></table>';
 

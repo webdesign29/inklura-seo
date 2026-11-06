@@ -1,5 +1,7 @@
 # Inklura SEO
 
+The WordPress.org edition includes French, German, Spanish, Italian and Brazilian Portuguese interface translations. English is the fallback. Bundled catalogues are in `languages/`; WordPress.org language packs retain their normal priority. The directory description translations require separate approval by the relevant WordPress.org locale teams.
+
 [![CI](https://github.com/webdesign29/inklura-seo/actions/workflows/ci.yml/badge.svg)](https://github.com/webdesign29/inklura-seo/actions/workflows/ci.yml)
 ![License: GPL-2.0-or-later](https://img.shields.io/badge/license-GPL--2.0--or--later-blue.svg)
 ![PHP 7.4+](https://img.shields.io/badge/php-7.4%2B-8892bf.svg)

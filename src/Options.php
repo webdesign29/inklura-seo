@@ -48,7 +48,7 @@ class Options {
 			'twitter_site'      => '',             // @handle for twitter:site
 			// Breadcrumbs.
 			'enable_breadcrumbs' => 1,             // BreadcrumbList JSON-LD + trail
-			'breadcrumb_home_label' => 'Home',
+			'breadcrumb_home_label' => '', // empty uses the current locale's Home label
 			// Sitemap tuning.
 			'sitemap_max_urls'  => 1000,           // split into an index above this
 			'sitemap_taxonomies' => 1,             // include public taxonomy archives

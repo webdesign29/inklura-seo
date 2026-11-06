@@ -4,11 +4,12 @@ from zipfile import ZipFile,ZIP_DEFLATED,ZipInfo
 import hashlib,re
 root=Path(__file__).resolve().parents[1]
 out=root/'dist/wordpress-org/inklura-seo.zip';out.parent.mkdir(parents=True,exist_ok=True)
-files=[root/n for n in ['inklura-seo.php','uninstall.php','readme.txt','LICENSE']]+sorted((root/'src').glob('*.php'))
+files=[root/n for n in ['inklura-seo.php','uninstall.php','readme.txt','LICENSE']]+sorted((root/'src').glob('*.php'))+sorted((root/'languages').glob('*'))
 with ZipFile(out,'w',ZIP_DEFLATED) as z:
  for f in files:
   if f.name=='Updater.php':continue
-  data=f.read_text()
+  data=f.read_bytes()
+  if f.suffix=='.php':data=data.decode('utf-8')
   if f.name=='Plugin.php':
    start=data.index('\t\t// Auto-updates for normal-plugin installs only.')
    end=data.index('\n\t\t/**',start)

@@ -57,9 +57,9 @@ class Breadcrumbs {
 	public function crumbs(): array {
 		$crumbs = array();
 
-		$home_label = (string) $this->options->get( 'breadcrumb_home_label', 'Home' );
+		$home_label = (string) $this->options->get( 'breadcrumb_home_label', '' );
 		if ( '' === trim( $home_label ) ) {
-			$home_label = 'Home';
+			$home_label = __( 'Home', 'inklura-seo' );
 		}
 		$crumbs[] = array(
 			'name' => $home_label,
@@ -260,7 +260,7 @@ class Breadcrumbs {
 			}
 		}
 		$inner = implode( ' <span class="inklura-crumb-sep" aria-hidden="true">' . $sep . '</span> ', $parts );
-		return '<nav class="inklura-breadcrumbs" aria-label="Breadcrumb">' . $inner . '</nav>';
+		return '<nav class="inklura-breadcrumbs" aria-label="' . esc_attr__( 'Breadcrumb', 'inklura-seo' ) . '">' . $inner . '</nav>';
 	}
 
 	/** esc_html that degrades to htmlspecialchars in the WP-free harness. */

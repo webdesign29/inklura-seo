@@ -70,6 +70,13 @@ final class Plugin {
 			return;
 		}
 
+		// Register bundled fallback catalogues at init. WordPress.org language
+		// packs keep their normal priority over the copies shipped here.
+		add_action( 'init', array( $this, 'load_translations' ), 0 );
+		// Older WordPress versions cannot rediscover an initially unloaded
+		// bundled domain when the user or request locale changes later.
+		add_action( 'change_locale', array( $this, 'load_translations' ) );
+
 		// Multisite: settings are blog-scoped, so reset the per-request cache
 		// whenever code switches the current blog.
 		if ( is_multisite() ) {
@@ -118,6 +125,16 @@ final class Plugin {
 		 * @param Plugin $plugin The plugin instance.
 		 */
 		do_action( 'inklura/seo/booted', $this );
+	}
+
+	/** Register the locale path for normal and must-use installations. */
+	public function load_translations(): void {
+		$path = dirname( plugin_basename( INKLURA_SEO_FILE ) ) . '/languages';
+		if ( INKLURA_SEO_IS_MU ) {
+			load_muplugin_textdomain( 'inklura-seo', $path );
+		} else {
+			load_plugin_textdomain( 'inklura-seo', false, $path );
+		}
 	}
 
 	/**

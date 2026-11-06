@@ -1,0 +1,448 @@
+# Inklura SEO translations. GPL-2.0-or-later.
+# AI-assisted; WordPress.org approval is separate from bundled availability.
+msgid ""
+msgstr ""
+"Project-Id-Version: Inklura SEO 0.2.3\n"
+"POT-Creation-Date: 2026-11-06 12:00+0100\n"
+"PO-Revision-Date: 2026-11-06 12:00+0100\n"
+"Last-Translator: Inklura (AI-assisted translation)\n"
+"Language-Team: https://translate.wordpress.org/projects/wp-plugins/inklura-seo/\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Inklura SEO catalogue builder\n"
+"X-Translation-Source: AI-assisted; submitted for locale-team review\n"
+
+#: src/TermMeta.php:104
+msgid "Overrides the document title for this term archive."
+msgstr "Substitui o título do documento para o arquivo deste termo."
+
+#: src/TermMeta.php:84 src/TermMeta.php:110
+msgid "Up to ~160 characters. Leave blank to use the term description."
+msgstr ""
+"Até cerca de 160 caracteres. Deixe em branco para usar a descrição do termo."
+
+#: src/TermMeta.php:78
+msgid ""
+"Overrides the document title for this term archive. Leave blank to use the "
+"title format."
+msgstr ""
+"Substitui o título do documento para o arquivo deste termo. Deixe em branco "
+"para usar o formato do título."
+
+#: src/Settings.php:285
+msgid "Network → Inklura SEO"
+msgstr "Rede → Inklura SEO"
+
+#: src/Settings.php:284
+msgid ""
+"Network defaults are configured; values you leave at their default here "
+"inherit from"
+msgstr ""
+"Há padrões de rede configurados; os valores que você deixar no padrão aqui "
+"serão herdados de"
+
+#: src/Settings.php:272
+msgid "Plugin catalogue"
+msgstr "Catálogo de plugins"
+
+#: src/Settings.php:270
+msgid "Created by Benjamin Favre."
+msgstr "Criado por Benjamin Favre."
+
+#: src/Settings.php:269
+msgid "Sitemap:"
+msgstr "Mapa do site:"
+
+#: src/Settings.php:265
+msgid "Save settings"
+msgstr "Salvar configurações"
+
+#: src/Settings.php:262
+msgid ""
+"Output WebSite/Organization (home), Article (posts) and BreadcrumbList data"
+msgstr ""
+"Gerar dados WebSite/Organization (página inicial), Article (posts) e "
+"BreadcrumbList"
+
+#: src/Settings.php:261
+msgid "Serve /inklura-sitemap.xml and advertise it in robots.txt"
+msgstr "Disponibilizar /inklura-sitemap.xml e indicá-lo em robots.txt"
+
+#: src/Settings.php:260
+msgid "Output Open Graph + Twitter Card tags"
+msgstr "Gerar tags Open Graph e Twitter Card"
+
+#: src/Settings.php:259
+msgid "Output document title, meta description, canonical and robots"
+msgstr ""
+"Gerar o título do documento, a metadescrição, a URL canônica e as diretivas "
+"robots"
+
+#: src/Settings.php:257
+msgid "Modules"
+msgstr "Módulos"
+
+#: src/Settings.php:254
+msgid "noindex date-based archive pages"
+msgstr "aplicar noindex às páginas de arquivo por data"
+
+#: src/Settings.php:254
+msgid "Date archives"
+msgstr "Arquivos por data"
+
+#: src/Settings.php:253
+msgid "noindex author archive pages"
+msgstr "aplicar noindex às páginas de arquivo de autor"
+
+#: src/Settings.php:253
+msgid "Author archives"
+msgstr "Arquivos de autor"
+
+#: src/Settings.php:252
+msgid "noindex page 2+ of archives / paginated content"
+msgstr ""
+"aplicar noindex a partir da página 2 dos arquivos e conteúdos paginados"
+
+#: src/Settings.php:252
+msgid "Paginated pages"
+msgstr "Páginas paginadas"
+
+#: src/Settings.php:251
+msgid "noindex search-result pages"
+msgstr "aplicar noindex às páginas de resultados de pesquisa"
+
+#: src/Settings.php:251
+msgid "Search results"
+msgstr "Resultados de pesquisa"
+
+#: src/Settings.php:249
+msgid "Indexing (robots)"
+msgstr "Indexação (robots)"
+
+#: src/Settings.php:246
+msgid "Add <image:image> for entries with a featured image"
+msgstr "Adicionar <image:image> aos conteúdos com imagem destacada"
+
+#: src/Settings.php:246
+msgid "Include featured images"
+msgstr "Incluir imagens destacadas"
+
+#: src/Settings.php:245
+msgid "Authors who have published content"
+msgstr "Autores com conteúdo publicado"
+
+#: src/Settings.php:245
+msgid "Include author archives"
+msgstr "Incluir arquivos de autor"
+
+#: src/Settings.php:244
+msgid "Categories, tags and public custom taxonomies"
+msgstr "Categorias, tags e taxonomias personalizadas públicas"
+
+#: src/Settings.php:244
+msgid "Include taxonomy archives"
+msgstr "Incluir arquivos de taxonomias"
+
+#: src/Settings.php:242
+msgid ""
+"Above this, the sitemap splits into a real index of paginated sub-sitemaps."
+msgstr ""
+"Acima deste limite, o mapa do site é dividido em mapas secundários "
+"paginados, reunidos em um índice."
+
+#: src/Settings.php:233
+msgid "Sitemap"
+msgstr "Mapa do site"
+
+#: src/Settings.php:226
+msgid ""
+"BreadcrumbList structured data + the [inklura_breadcrumbs] shortcode / "
+"template tag"
+msgstr ""
+"Dados estruturados BreadcrumbList e o shortcode [inklura_breadcrumbs] ou a "
+"tag de modelo"
+
+#: src/Settings.php:226
+msgid "Enable breadcrumbs"
+msgstr "Ativar trilha de navegação"
+
+#: src/Settings.php:219
+msgid "Logo / image URL"
+msgstr "URL do logo ou da imagem"
+
+#: src/Settings.php:216
+msgid "Leave blank to use the site name."
+msgstr "Deixe em branco para usar o nome do site."
+
+#: src/Settings.php:214
+msgid "Entity name"
+msgstr "Nome da entidade"
+
+#: src/Settings.php:211
+msgid "Emit an Organization or Person node on the home page (or none)."
+msgstr "Gerar um nó Organization ou Person na página inicial, ou nenhum."
+
+#: src/Settings.php:209
+msgid "Entity type"
+msgstr "Tipo de entidade"
+
+#: src/Settings.php:206
+msgid "Home page entity (schema)"
+msgstr "Entidade da página inicial (esquema)"
+
+#: src/Settings.php:202
+msgid "Output as twitter:site. A handle or a profile URL — both are accepted."
+msgstr ""
+"Gerado como twitter:site. São aceitos um nome de usuário ou uma URL de "
+"perfil."
+
+#: src/Settings.php:197
+msgid ""
+"Fallback share image when a post has no OG override and no featured image."
+msgstr ""
+"Imagem alternativa de compartilhamento quando um post não tem imagem OG "
+"personalizada nem imagem destacada."
+
+#: src/Settings.php:192
+msgid "Social"
+msgstr "Redes sociais"
+
+#: src/Settings.php:188
+msgid ""
+"%page% is replaced with the page suffix on paginated views (and dropped on "
+"page 1)."
+msgstr ""
+"%page% é substituído pelo sufixo de página nas visualizações paginadas e "
+"omitido na página 1."
+
+#: src/Settings.php:186
+msgid "Tokens:"
+msgstr "Variáveis:"
+
+#: src/Settings.php:176
+msgid "Titles"
+msgstr "Títulos"
+
+#: src/Settings.php:57
+msgid "Settings"
+msgstr "Configurações"
+
+#: src/Network.php:242
+msgid "Save network defaults"
+msgstr "Salvar padrões da rede"
+
+#: src/Network.php:236
+msgid "Enabled by default"
+msgstr "Ativado por padrão"
+
+#: src/Network.php:228
+msgid "noindex date archives"
+msgstr "aplicar noindex aos arquivos por data"
+
+#: src/Network.php:227
+msgid "noindex author archives"
+msgstr "aplicar noindex aos arquivos de autor"
+
+#: src/Network.php:226
+msgid "noindex paginated pages"
+msgstr "aplicar noindex às páginas paginadas"
+
+#: src/Network.php:225
+msgid "noindex search results"
+msgstr "aplicar noindex aos resultados de pesquisa"
+
+#: src/Network.php:224
+msgid "Sitemap: featured images"
+msgstr "Mapa do site: imagens destacadas"
+
+#: src/Network.php:223
+msgid "Sitemap: author archives"
+msgstr "Mapa do site: arquivos de autor"
+
+#: src/Network.php:222
+msgid "Sitemap: taxonomy archives"
+msgstr "Mapa do site: arquivos de taxonomias"
+
+#: src/Network.php:221 src/Settings.php:224
+msgid "Breadcrumbs"
+msgstr "Trilha de navegação"
+
+#: src/Network.php:220 src/Settings.php:262
+msgid "JSON-LD schema"
+msgstr "Esquema JSON-LD"
+
+#: src/Network.php:219 src/Settings.php:261
+msgid "XML sitemap"
+msgstr "Mapa do site XML"
+
+#: src/Network.php:218 src/Settings.php:260
+msgid "Open Graph / Twitter"
+msgstr "Open Graph / Twitter"
+
+#: src/Network.php:217 src/Settings.php:259
+msgid "Titles & meta"
+msgstr "Títulos e metadados"
+
+#: src/Network.php:212 src/Settings.php:236
+msgid "URLs per sitemap"
+msgstr "URLs por mapa do site"
+
+#: src/Network.php:206 src/Settings.php:228
+msgid "Home crumb label"
+msgstr "Rótulo da página inicial na trilha de navegação"
+
+#: src/Network.php:200
+msgid "Home entity logo / image URL"
+msgstr "URL do logo ou da imagem da entidade da página inicial"
+
+#: src/Network.php:196
+msgid "Home entity name"
+msgstr "Nome da entidade da página inicial"
+
+#: src/Network.php:194
+msgid "Home entity type"
+msgstr "Tipo de entidade da página inicial"
+
+#: src/Network.php:182 src/Settings.php:337
+msgid "None"
+msgstr "Nenhum"
+
+#: src/Network.php:181 src/Settings.php:336
+msgid "Person"
+msgstr "Pessoa"
+
+#: src/Network.php:180 src/Settings.php:335
+msgid "Organization"
+msgstr "Organização"
+
+#: src/Network.php:174 src/Settings.php:200
+msgid "Twitter / X @site handle"
+msgstr "Nome de usuário @site do Twitter / X"
+
+#: src/Network.php:170 src/Settings.php:195
+msgid "Default OG image URL"
+msgstr "URL da imagem OG padrão"
+
+#: src/Network.php:166 src/Settings.php:184
+msgid "Title format"
+msgstr "Formato do título"
+
+#: src/Network.php:163 src/Settings.php:180
+msgid "Title separator"
+msgstr "Separador do título"
+
+#: src/Network.php:144
+msgid "Network defaults saved."
+msgstr "Padrões da rede salvos."
+
+#: src/Network.php:141
+msgid ""
+"These defaults apply to every site that has not overridden the corresponding"
+" setting on its own Inklura SEO page."
+msgstr ""
+"Estes padrões se aplicam a todos os sites que não personalizaram a "
+"configuração correspondente em sua própria página do Inklura SEO."
+
+#: src/Network.php:140
+msgid "Inklura SEO — Network defaults"
+msgstr "Inklura SEO — Padrões da rede"
+
+#: src/Network.php:57
+msgid "Invalid nonce"
+msgstr "Token de segurança inválido"
+
+#: src/Network.php:53
+msgid "Missing nonce"
+msgstr "Token de segurança ausente"
+
+#: src/Network.php:50
+msgid "Forbidden"
+msgstr "Acesso proibido"
+
+#: src/MetaBox.php:100
+msgid ""
+"Discourage search engines from indexing this entry (noindex, nofollow)."
+msgstr ""
+"Desencorajar os mecanismos de pesquisa a indexar este conteúdo e seguir seus"
+" links (noindex, nofollow)."
+
+#: src/MetaBox.php:97
+msgid ""
+"Overrides the share image for this entry. Falls back to the featured image, "
+"then the site default."
+msgstr ""
+"Substitui a imagem de compartilhamento deste conteúdo. Caso não seja "
+"definida, usa a imagem destacada e depois a imagem padrão do site."
+
+#: src/MetaBox.php:94
+msgid "Social image (Open Graph) URL"
+msgstr "URL da imagem para redes sociais (Open Graph)"
+
+#: src/MetaBox.php:92
+msgid "Up to ~160 characters. Leave blank to derive from the excerpt/content."
+msgstr ""
+"Até cerca de 160 caracteres. Deixe em branco para usar o resumo ou o "
+"conteúdo."
+
+#: src/MetaBox.php:90 src/TermMeta.php:82 src/TermMeta.php:108
+msgid "Meta description"
+msgstr "Metadescrição"
+
+#: src/MetaBox.php:88
+msgid ""
+"Overrides the <title> for this entry. Leave blank to use the title format."
+msgstr ""
+"Substitui <title> para este conteúdo. Deixe em branco para usar o formato do"
+" título."
+
+#: src/MetaBox.php:85 src/TermMeta.php:76 src/TermMeta.php:102
+msgid "SEO title"
+msgstr "Título SEO"
+
+#: src/Frontend.php:191
+msgid "Page not found"
+msgstr "Página não encontrada"
+
+#: src/Frontend.php:151
+msgid "Page"
+msgstr "Página"
+
+#. Author URI of the plugin
+#: inklura-seo.php
+msgid "https://www.inklura.fr/"
+msgstr "https://www.inklura.fr/"
+
+#. Author of the plugin
+#: inklura-seo.php
+msgid "Benjamin Favre"
+msgstr "Benjamin Favre"
+
+#. Description of the plugin
+#: inklura-seo.php
+msgid ""
+"Lightweight, dependency-free SEO for WordPress: titles, meta description, "
+"canonical, robots, Open Graph + Twitter Cards, an XML sitemap, JSON-LD "
+"schema, and a per-post SEO meta box. Multisite-safe."
+msgstr ""
+"SEO leve e sem dependências para WordPress: títulos, metadescrição, URLs "
+"canônicas, diretivas robots, Open Graph e Twitter Cards, mapa do site XML, "
+"esquema JSON-LD e uma metabox SEO por post. Compatível com multisite."
+
+#. Plugin URI of the plugin
+#: inklura-seo.php
+msgid "https://github.com/webdesign29/inklura-seo"
+msgstr "https://github.com/webdesign29/inklura-seo"
+
+#. Plugin Name of the plugin
+#: inklura-seo.php src/Settings.php:169
+msgid "Inklura SEO"
+msgstr "Inklura SEO"
+
+msgid "Home"
+msgstr "Início"
+
+msgid "Breadcrumb"
+msgstr "Trilha de navegação"

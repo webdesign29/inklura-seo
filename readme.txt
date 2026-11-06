@@ -4,7 +4,7 @@ Tags: seo, sitemap, meta description, open graph, structured data
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.2.2
+Stable tag: 0.2.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -66,6 +66,9 @@ Yes. Settings are scoped to each site. Network administrators can configure defa
 Deactivation retains settings and metadata. Deleting the plugin through WordPress removes its own settings and metadata, including network defaults on multisite. Back up any metadata you want to retain before deleting it.
 
 == Changelog ==
+
+= 0.2.3 =
+* Bundle French, German, Spanish, Italian and Brazilian Portuguese interface translations.
 
 = 0.2.2 =
 * Credit Benjamin Favre and add links to Inklura and the plugin catalogue.

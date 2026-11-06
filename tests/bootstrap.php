@@ -33,6 +33,10 @@ function inkseo_test_reset() {
 }
 
 if ( ! function_exists( 'get_option' ) ) {
+	function esc_attr__( $text, $domain = 'default' ) {
+		return htmlspecialchars( $text, ENT_QUOTES, 'UTF-8' );
+	}
+
 	// --- options ---
 	function get_option( $k, $d = false ) {
 		return array_key_exists( $k, $GLOBALS['_inkseo_opts'] ) ? $GLOBALS['_inkseo_opts'][ $k ] : $d;

@@ -94,6 +94,10 @@ jobs:
           PHP
           wp core install --path=/tmp/inkseo-wp --url=http://127.0.0.1:18079 --title='SEO fixture' --admin_user=audit --admin_password=isolated-fixture --admin_email=audit@example.test --skip-email
           wp plugin install "$PWD/dist/wordpress-org/inklura-seo.zip" --activate --path=/tmp/inkseo-wp
+      - name: Bundled translations and locale switching
+        run: |
+          wp language core install fr_FR de_DE es_ES it_IT pt_BR --path=/tmp/inkseo-wp
+          wp eval-file "$PWD/tests/i18n.php" --path=/tmp/inkseo-wp
       - name: Native metadata, permissions and large sitemap tests
         run: INKLURA_SEO_LARGE_TEST=1 wp eval-file "$PWD/tests/integration.php" --path=/tmp/inkseo-wp
       - name: HTTP requests, permalinks and module toggles

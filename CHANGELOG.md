@@ -3,6 +3,12 @@
 All notable changes to **Inklura SEO** are documented here. This project adheres
 to [Semantic Versioning](https://semver.org/).
 
+## 0.2.3
+
+- Bundle French, German, Spanish, Italian and Brazilian Portuguese interface catalogues, with English fallback.
+- Register bundled translations at init for normal and must-use installations; retain WordPress.org language-pack priority.
+- Translate default breadcrumb labels and accessibility text while retaining saved custom labels.
+
 ## 0.2.2
 
 - Credit Benjamin Favre and link the Inklura platform and plugin catalogue.

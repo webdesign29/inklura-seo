@@ -88,7 +88,7 @@ msgstr "Module"
 
 #: src/Settings.php:254
 msgid "noindex date-based archive pages"
-msgstr "Datumsarchivseiten auf noindex setzen"
+msgstr "noindex für Datumsarchivseiten"
 
 #: src/Settings.php:254
 msgid "Date archives"
@@ -96,7 +96,7 @@ msgstr "Datumsarchive"
 
 #: src/Settings.php:253
 msgid "noindex author archive pages"
-msgstr "Autorenarchivseiten auf noindex setzen"
+msgstr "noindex für Autorenarchivseiten"
 
 #: src/Settings.php:253
 msgid "Author archives"
@@ -104,7 +104,7 @@ msgstr "Autorenarchive"
 
 #: src/Settings.php:252
 msgid "noindex page 2+ of archives / paginated content"
-msgstr "Archivseiten und paginierte Inhalte ab Seite 2 auf noindex setzen"
+msgstr "noindex für Archivseiten und paginierte Inhalte ab Seite 2"
 
 #: src/Settings.php:252
 msgid "Paginated pages"
@@ -112,7 +112,7 @@ msgstr "Paginierte Seiten"
 
 #: src/Settings.php:251
 msgid "noindex search-result pages"
-msgstr "Suchergebnisseiten auf noindex setzen"
+msgstr "noindex für Suchergebnisseiten"
 
 #: src/Settings.php:251
 msgid "Search results"
@@ -242,19 +242,19 @@ msgstr "Standardmäßig aktiviert"
 
 #: src/Network.php:228
 msgid "noindex date archives"
-msgstr "Datumsarchive auf noindex setzen"
+msgstr "noindex für Datumsarchive"
 
 #: src/Network.php:227
 msgid "noindex author archives"
-msgstr "Autorenarchive auf noindex setzen"
+msgstr "noindex für Autorenarchive"
 
 #: src/Network.php:226
 msgid "noindex paginated pages"
-msgstr "Paginierte Seiten auf noindex setzen"
+msgstr "noindex für Paginierte Seiten"
 
 #: src/Network.php:225
 msgid "noindex search results"
-msgstr "Suchergebnisse auf noindex setzen"
+msgstr "noindex für Suchergebnisse"
 
 #: src/Network.php:224
 msgid "Sitemap: featured images"

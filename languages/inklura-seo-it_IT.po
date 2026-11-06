@@ -88,7 +88,7 @@ msgstr "Moduli"
 
 #: src/Settings.php:254
 msgid "noindex date-based archive pages"
-msgstr "Applica noindex alle pagine degli archivi per data"
+msgstr "applica noindex alle pagine degli archivi per data"
 
 #: src/Settings.php:254
 msgid "Date archives"
@@ -96,7 +96,7 @@ msgstr "Archivi per data"
 
 #: src/Settings.php:253
 msgid "noindex author archive pages"
-msgstr "Applica noindex alle pagine degli archivi autore"
+msgstr "applica noindex alle pagine degli archivi autore"
 
 #: src/Settings.php:253
 msgid "Author archives"
@@ -105,7 +105,7 @@ msgstr "Archivi autore"
 #: src/Settings.php:252
 msgid "noindex page 2+ of archives / paginated content"
 msgstr ""
-"Applica noindex dalla pagina 2 degli archivi e dei contenuti suddivisi in "
+"applica noindex dalla pagina 2 degli archivi e dei contenuti suddivisi in "
 "pagine"
 
 #: src/Settings.php:252
@@ -114,7 +114,7 @@ msgstr "Contenuti suddivisi in pagine"
 
 #: src/Settings.php:251
 msgid "noindex search-result pages"
-msgstr "Applica noindex alle pagine dei risultati di ricerca"
+msgstr "applica noindex alle pagine dei risultati di ricerca"
 
 #: src/Settings.php:251
 msgid "Search results"
@@ -242,19 +242,19 @@ msgstr "Abilitato per impostazione predefinita"
 
 #: src/Network.php:228
 msgid "noindex date archives"
-msgstr "Applica noindex agli archivi per data"
+msgstr "applica noindex agli archivi per data"
 
 #: src/Network.php:227
 msgid "noindex author archives"
-msgstr "Applica noindex agli archivi autore"
+msgstr "applica noindex agli archivi autore"
 
 #: src/Network.php:226
 msgid "noindex paginated pages"
-msgstr "Applica noindex ai contenuti suddivisi in pagine"
+msgstr "applica noindex ai contenuti suddivisi in pagine"
 
 #: src/Network.php:225
 msgid "noindex search results"
-msgstr "Applica noindex ai risultati di ricerca"
+msgstr "applica noindex ai risultati di ricerca"
 
 #: src/Network.php:224
 msgid "Sitemap: featured images"

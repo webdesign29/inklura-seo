@@ -73,6 +73,9 @@ final class Plugin {
 		// Register bundled fallback catalogues at init. WordPress.org language
 		// packs keep their normal priority over the copies shipped here.
 		add_action( 'init', array( $this, 'load_translations' ), 0 );
+		// Older WordPress versions cannot rediscover an initially unloaded
+		// bundled domain when the user or request locale changes later.
+		add_action( 'change_locale', array( $this, 'load_translations' ) );
 
 		// Multisite: settings are blog-scoped, so reset the per-request cache
 		// whenever code switches the current blog.

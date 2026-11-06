@@ -1,5 +1,5 @@
 === Inklura SEO ===
-Contributors: Benjamin Favre
+Contributors: gr0b1
 Tags: seo, sitemap, meta description, open graph, structured data
 Requires at least: 5.8
 Tested up to: 7.1
